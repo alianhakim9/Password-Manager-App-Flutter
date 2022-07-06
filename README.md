@@ -1,4 +1,4 @@
-# password_manager
+# PAMAN.ID (Password Manager)
 
 Aplikasi Password Manager adalah aplikasi untuk manajemen password dan data-data personal lainnya.
 
