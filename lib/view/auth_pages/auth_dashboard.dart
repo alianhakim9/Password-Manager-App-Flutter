@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:password_manager/view/auth_pages/auth_login.dart';
 
 class AuthDashboard extends StatefulWidget {
   const AuthDashboard({Key? key}) : super(key: key);
@@ -35,8 +36,11 @@ class _AuthDashboardState extends State<AuthDashboard> {
                   height: 10,
                 ),
                 ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(primary: Colors.amber),
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => const Login()));
+                  },
+                  style: ElevatedButton.styleFrom(primary: Colors.amber[600]),
                   child: const Text(
                     "Masuk",
                     style: TextStyle(color: Colors.black),
@@ -44,7 +48,7 @@ class _AuthDashboardState extends State<AuthDashboard> {
                 ),
                 OutlinedButton(
                   onPressed: () {},
-                  style: OutlinedButton.styleFrom(primary: Colors.amber),
+                  style: OutlinedButton.styleFrom(primary: Colors.amber[600]),
                   child: const Text(
                     "Daftar",
                     style: TextStyle(color: Colors.black),
