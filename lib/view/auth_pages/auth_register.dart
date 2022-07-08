@@ -1,7 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:password_manager/api/api_service.dart';
+import 'package:password_manager/viewmodel/auth_viewmodel.dart';
 
 final GlobalKey<ScaffoldState> _scaffoldState = GlobalKey<ScaffoldState>();
 
@@ -22,7 +22,7 @@ class _RegisterState extends State<Register> {
   final TextEditingController _controllerName = TextEditingController();
   final TextEditingController _controllerUsername = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
-  final ApiService _apiService = ApiService();
+  final AuthViewModel viewModel = AuthViewModel();
 
   void hideLoading() {
     setState(() {
@@ -44,18 +44,22 @@ class _RegisterState extends State<Register> {
 
   void doRegister() {
     showLoading();
-    _apiService.register(name, username, password).then((value) {
+    viewModel.register(name, username, password).then((value) {
       String? userId = value?.data.toString();
       String? message = value?.message.toString();
       if (userId != 'NULL') {
         hideLoading();
         showSnackbar('berhasil mendaftar');
       } else if (value!.status == 'CONFLICT') {
+        hideLoading();
         showSnackbar('username sudah terdaftar');
       } else {
         hideLoading();
         showSnackbar(message!);
       }
+    }).catchError((err) {
+      hideLoading();
+      showSnackbar('Tidak dapat terhubung ke server');
     });
   }
 

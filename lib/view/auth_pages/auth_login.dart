@@ -1,7 +1,9 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, invalid_return_type_for_catch_error
+
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:password_manager/api/api_service.dart';
+import 'package:password_manager/viewmodel/auth_viewmodel.dart';
 
 final GlobalKey<ScaffoldState> _scaffoldState = GlobalKey<ScaffoldState>();
 
@@ -20,7 +22,7 @@ class _LoginState extends State<Login> {
   String password = '';
   final TextEditingController _controllerUsername = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
-  final ApiService _apiService = ApiService();
+  final AuthViewModel viewModel = AuthViewModel();
 
   void hideLoading() {
     setState(() {
@@ -42,7 +44,8 @@ class _LoginState extends State<Login> {
 
   void doLogin() {
     showLoading();
-    _apiService.login(username, password).then((value) {
+    viewModel.login(username, password).then((value) {
+      log('$value');
       String? userId = value?.data.toString();
       String? message = value?.message.toString();
 
@@ -53,6 +56,9 @@ class _LoginState extends State<Login> {
         hideLoading();
         showSnackbar(message!);
       }
+    }).catchError((err) {
+      hideLoading();
+      showSnackbar('Tidak dapat terhubung ke server');
     });
   }
 
