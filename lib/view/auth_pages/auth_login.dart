@@ -1,7 +1,5 @@
 // ignore_for_file: deprecated_member_use
 
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:password_manager/api/api_service.dart';
 
@@ -50,6 +48,7 @@ class _LoginState extends State<Login> {
 
       if (userId != 'NULL') {
         hideLoading();
+        showSnackbar('berhasil login');
       } else {
         hideLoading();
         showSnackbar(message!);
@@ -145,7 +144,7 @@ class _LoginState extends State<Login> {
                           ElevatedButton.styleFrom(primary: Colors.amber[600]),
                       child: _isLoading
                           ? const Text(
-                              'Loading...',
+                              'Sedang Login...',
                               style: TextStyle(color: Colors.black),
                             )
                           : const Text(

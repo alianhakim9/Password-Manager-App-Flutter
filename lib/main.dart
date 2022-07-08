@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:password_manager/view/splash_screen.dart';
+import 'package:password_manager/view/auth_pages/auth_dashboard.dart';
 
 void main() => runApp(MaterialApp(
-      home: const SplashScreen(),
+      home: const AuthDashboard(),
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.amber,

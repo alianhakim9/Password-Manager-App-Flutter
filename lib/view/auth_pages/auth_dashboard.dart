@@ -1,16 +1,11 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:password_manager/view/auth_pages/auth_login.dart';
 
-class AuthDashboard extends StatefulWidget {
+import 'auth_login.dart';
+import 'auth_register.dart';
+
+class AuthDashboard extends StatelessWidget {
   const AuthDashboard({Key? key}) : super(key: key);
 
-  @override
-  State<AuthDashboard> createState() => _AuthDashboardState();
-}
-
-class _AuthDashboardState extends State<AuthDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,7 +42,12 @@ class _AuthDashboardState extends State<AuthDashboard> {
                   ),
                 ),
                 OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const Register()));
+                  },
                   style: OutlinedButton.styleFrom(primary: Colors.amber[600]),
                   child: const Text(
                     "Daftar",
