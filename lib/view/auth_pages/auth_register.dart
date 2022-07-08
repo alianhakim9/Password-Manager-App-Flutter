@@ -95,7 +95,7 @@ class _RegisterState extends State<Register> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Image.asset('assets/illustrations/login.png'),
+                    Image.asset('assets/illustrations/register.png'),
                     const Text(
                       'Silahkan Lengkapi\nData Untuk Mendaftar',
                       style: TextStyle(
