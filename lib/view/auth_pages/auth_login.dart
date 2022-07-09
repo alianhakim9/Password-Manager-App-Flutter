@@ -3,6 +3,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:password_manager/view/home.dart';
 import 'package:password_manager/viewmodel/auth_viewmodel.dart';
 
 final GlobalKey<ScaffoldState> _scaffoldState = GlobalKey<ScaffoldState>();
@@ -51,7 +52,9 @@ class _LoginState extends State<Login> {
 
       if (userId != 'NULL') {
         hideLoading();
-        showSnackbar('berhasil login');
+        Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const Home()),
+            (route) => false);
       } else {
         hideLoading();
         showSnackbar(message!);
