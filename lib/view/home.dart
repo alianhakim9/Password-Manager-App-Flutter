@@ -43,7 +43,7 @@ class _HomeState extends State<Home> {
     });
   }
 
-  getData() async {
+  void getData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var userId = prefs.getString('userId') ?? false;
     if (userId != '') {
@@ -51,15 +51,19 @@ class _HomeState extends State<Home> {
     }
   }
 
+  void clearShared() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.clear();
+  }
+
+  Future refreshData() async {
+    getData();
+  }
+
   @override
   void initState() {
     super.initState();
     getData();
-  }
-
-  clearShared() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.clear();
   }
 
   @override
@@ -100,11 +104,16 @@ class _HomeState extends State<Home> {
             Scaffold(
               body: _showLoading
                   ? const LinearProgressIndicator()
-                  : ListView.builder(
-                      itemBuilder: (context, i) {
-                        return PasswordManagerCard(passwords[i]);
-                      },
-                      itemCount: passwords.length,
+                  : RefreshIndicator(
+                      onRefresh: refreshData,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.only(
+                            bottom: kFloatingActionButtonMargin + 48),
+                        itemBuilder: (context, i) {
+                          return PasswordManagerCard(passwords[i]);
+                        },
+                        itemCount: passwords.length,
+                      ),
                     ),
               floatingActionButton: FloatingActionButton.extended(
                 onPressed: () {

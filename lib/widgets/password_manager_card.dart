@@ -1,7 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:password_manager/model/password_manager_response_model.dart';
+import 'package:password_manager/model/password_manager/password_manager_response_model.dart';
 
 Widget PasswordManagerCard(Paman data) {
   return Padding(

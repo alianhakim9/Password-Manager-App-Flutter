@@ -3,10 +3,9 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:http/http.dart' show Client;
-import 'package:password_manager/model/add_password_manager_response.dart';
 import 'package:password_manager/model/base_response_model.dart';
-import 'package:password_manager/model/password_manager_response_model.dart';
-import 'package:password_manager/view/password_manager_pages/add_password_manager.dart';
+import 'package:password_manager/model/password_manager/add_password_manager_response.dart';
+import 'package:password_manager/model/password_manager/password_manager_response_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
