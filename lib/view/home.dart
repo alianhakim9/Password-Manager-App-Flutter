@@ -1,4 +1,9 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:password_manager/viewmodel/main_viewmodel.dart';
+import 'package:password_manager/widgets/password_manager_card.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -8,6 +13,49 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  final MainViewModel viewModel = MainViewModel();
+  List passwords = [];
+  bool _showLoading = false;
+
+  void showLoading() {
+    setState(() {
+      _showLoading = true;
+    });
+  }
+
+  void hideLoading() {
+    setState(() {
+      _showLoading = false;
+    });
+  }
+
+  void getPasswords(userId) async {
+    showLoading();
+    viewModel.getPasswordManager(userId).then((value) {
+      setState(() {
+        hideLoading();
+        passwords = value;
+      });
+    }).catchError((errr) {
+      hideLoading();
+      log('error : $errr');
+    });
+  }
+
+  getData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var userId = prefs.getString('userId') ?? false;
+    if (userId != '') {
+      getPasswords(userId);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -16,24 +64,36 @@ class _HomeState extends State<Home> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Home'),
-          backgroundColor: Colors.amber[600],
           bottom: const TabBar(
+            indicatorColor: Color.fromRGBO(66, 66, 66, 1),
+            isScrollable: true,
             tabs: [
+              Tab(text: 'PASSWORDS'),
               Tab(
-                icon: Icon(Icons.key),
+                text: 'CATATAN',
               ),
               Tab(
-                icon: Icon(Icons.book),
-              ),
-              Tab(
-                icon: Icon(Icons.personal_injury),
+                text: 'PERSONAL INFO',
               ),
             ],
           ),
+          actions: [
+            IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.notifications_outlined))
+          ],
         ),
         body: TabBarView(
           children: [
             Scaffold(
+              body: _showLoading
+                  ? const LinearProgressIndicator()
+                  : ListView.builder(
+                      itemBuilder: (context, i) {
+                        return PasswordManagerCard(passwords[i]);
+                      },
+                      itemCount: passwords.length,
+                    ),
               floatingActionButton: FloatingActionButton.extended(
                 onPressed: () {},
                 label: const Text(
@@ -84,7 +144,7 @@ class _HomeState extends State<Home> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [Text('test')],
+                children: const [Text('test')],
               ),
             ),
           ),

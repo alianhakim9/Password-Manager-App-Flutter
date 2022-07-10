@@ -3,8 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:password_manager/viewmodel/auth_viewmodel.dart';
 
-final GlobalKey<ScaffoldState> _scaffoldState = GlobalKey<ScaffoldState>();
-
 class Register extends StatefulWidget {
   const Register({Key? key}) : super(key: key);
 
@@ -39,7 +37,8 @@ class _RegisterState extends State<Register> {
   }
 
   void showSnackbar(String message) {
-    _scaffoldState.currentState?.showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   void doRegister() {
@@ -89,7 +88,6 @@ class _RegisterState extends State<Register> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldState,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

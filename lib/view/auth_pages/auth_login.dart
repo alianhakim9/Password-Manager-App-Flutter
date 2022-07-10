@@ -1,12 +1,9 @@
 // ignore_for_file: deprecated_member_use, invalid_return_type_for_catch_error
 
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:password_manager/view/home.dart';
 import 'package:password_manager/viewmodel/auth_viewmodel.dart';
-
-final GlobalKey<ScaffoldState> _scaffoldState = GlobalKey<ScaffoldState>();
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -40,16 +37,15 @@ class _LoginState extends State<Login> {
   }
 
   void showSnackbar(String message) {
-    _scaffoldState.currentState?.showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   void doLogin() {
     showLoading();
     viewModel.login(username, password).then((value) {
-      log('$value');
       String? userId = value?.data.toString();
       String? message = value?.message.toString();
-
       if (userId != 'NULL') {
         hideLoading();
         Navigator.of(context).pushAndRemoveUntil(
@@ -88,7 +84,6 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldState,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
