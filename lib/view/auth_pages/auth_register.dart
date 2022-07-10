@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:password_manager/view/auth_pages/auth_login.dart';
 import 'package:password_manager/viewmodel/auth_viewmodel.dart';
 
 class Register extends StatefulWidget {
@@ -36,9 +37,9 @@ class _RegisterState extends State<Register> {
     });
   }
 
-  void showSnackbar(String message) {
+  void showSnackbar(String message, SnackBarAction myAction) {
     ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+        .showSnackBar(SnackBar(content: Text(message), action: myAction));
   }
 
   void doRegister() {
@@ -48,17 +49,27 @@ class _RegisterState extends State<Register> {
       String? message = value?.message.toString();
       if (userId != 'NULL') {
         hideLoading();
-        showSnackbar('berhasil mendaftar');
+        showSnackbar(
+            'berhasil mendaftar',
+            SnackBarAction(
+                label: 'OK',
+                onPressed: () {
+                  Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const Login()),
+                      (route) => false);
+                }));
       } else if (value!.status == 'CONFLICT') {
         hideLoading();
-        showSnackbar('username sudah terdaftar');
+        showSnackbar('username sudah terdaftar',
+            SnackBarAction(label: 'OK', onPressed: () {}));
       } else {
         hideLoading();
-        showSnackbar(message!);
+        showSnackbar(message!, SnackBarAction(label: 'OK', onPressed: () {}));
       }
     }).catchError((err) {
       hideLoading();
-      showSnackbar('Tidak dapat terhubung ke server');
+      showSnackbar('Tidak dapat terhubung ke server',
+          SnackBarAction(label: 'OK', onPressed: () {}));
     });
   }
 

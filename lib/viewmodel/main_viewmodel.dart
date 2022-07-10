@@ -10,4 +10,9 @@ class MainViewModel {
   Future getPasswordManager(userId) {
     return _apiService.getPasswordManagerByUserId(userId);
   }
+
+  Future addPasswordManager(
+      String username, String password, String website, String userId) {
+    return _apiService.addPasswordManager(username, password, website, userId);
+  }
 }

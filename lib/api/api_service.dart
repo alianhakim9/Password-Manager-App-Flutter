@@ -3,8 +3,10 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:http/http.dart' show Client;
+import 'package:password_manager/model/add_password_manager_response.dart';
 import 'package:password_manager/model/base_response_model.dart';
 import 'package:password_manager/model/password_manager_response_model.dart';
+import 'package:password_manager/view/password_manager_pages/add_password_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
@@ -65,6 +67,34 @@ class ApiService {
         PasswordManagerResponse passwordManagerResponse =
             PasswordManagerResponse.fromJson(jsonResponse);
         return passwordManagerResponse.data;
+      } else {
+        return null;
+      }
+    } on SocketException catch (e) {
+      throw const SocketException('tidak ada koneksi internet');
+    }
+  }
+
+  Future<AddPasswordManagerResponse?> addPasswordManager(
+      String username, String password, String website, String userId) async {
+    try {
+      final response = await client.post(
+          Uri.parse('$baseUrl/password-manager/'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: jsonEncode({
+            'pmUsername': username,
+            'pmPassword': password,
+            'pmWebsite': website,
+            'userId': userId
+          }));
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
+        AddPasswordManagerResponse addPasswordManagerResponse =
+            AddPasswordManagerResponse.fromJson(jsonResponse);
+        return addPasswordManagerResponse;
       } else {
         return null;
       }

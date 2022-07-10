@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:password_manager/view/password_manager_pages/add_password_manager.dart';
 import 'package:password_manager/viewmodel/main_viewmodel.dart';
 import 'package:password_manager/widgets/password_manager_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -56,6 +57,17 @@ class _HomeState extends State<Home> {
     getData();
   }
 
+  clearShared() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.clear();
+  }
+
+  @override
+  void dispose() async {
+    super.dispose();
+    clearShared();
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -95,7 +107,12 @@ class _HomeState extends State<Home> {
                       itemCount: passwords.length,
                     ),
               floatingActionButton: FloatingActionButton.extended(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const AddPasswordManager()));
+                },
                 label: const Text(
                   'Tambah Password',
                   style: TextStyle(color: Colors.white),
