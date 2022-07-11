@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:http/http.dart' show Client;
+import 'package:password_manager/api/response/auth_response.dart';
 import 'package:password_manager/model/base_response_model.dart';
 import 'package:password_manager/model/password_manager/add_password_manager_response.dart';
 import 'package:password_manager/model/password_manager/password_manager_response_model.dart';
@@ -13,20 +14,20 @@ class ApiService {
   Client client = Client();
 
   // auth
-  Future<BaseResponseModel?> login(String username, String password) async {
+  Future<AuthResponse?> login(String username, String password) async {
     try {
       final response = await client.post(Uri.parse("$baseUrl/auth/login"),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({'username': username, 'password': password}));
 
       if (response.statusCode == 400 || response.statusCode == 404) {
-        return baseResponseModelFromJson(response.body);
+        return AuthResponseFromJson(response.body);
       } else if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body);
-        BaseResponseModel model = BaseResponseModel.fromJson(jsonResponse);
+        AuthResponse model = AuthResponse.fromJson(jsonResponse);
         SharedPreferences prefs = await SharedPreferences.getInstance();
         prefs.setString('userId', model.data);
-        return baseResponseModelFromJson(response.body);
+        return AuthResponseFromJson(response.body);
       } else {
         return null;
       }
@@ -35,7 +36,7 @@ class ApiService {
     }
   }
 
-  Future<BaseResponseModel?> register(
+  Future<AuthResponse?> register(
       String name, String username, String password) async {
     try {
       final response = await client.post(Uri.parse("$baseUrl/auth/register"),
@@ -44,7 +45,7 @@ class ApiService {
           },
           body: jsonEncode(
               {'name': name, 'username': username, 'password': password}));
-      return baseResponseModelFromJson(response.body);
+      return AuthResponseFromJson(response.body);
     } on SocketException catch (e) {
       throw const SocketException('tidak ada koneksi internet');
     }
