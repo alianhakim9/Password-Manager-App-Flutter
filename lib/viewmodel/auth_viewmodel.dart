@@ -1,6 +1,5 @@
 import 'package:password_manager/api/api_service.dart';
 import 'package:password_manager/api/response/auth_response.dart';
-import 'package:password_manager/model/base_response_model.dart';
 
 class AuthViewModel {
   final ApiService _apiService = ApiService();

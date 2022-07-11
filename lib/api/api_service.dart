@@ -3,11 +3,12 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:http/http.dart' show Client;
-import 'package:password_manager/api/response/auth_response.dart';
-import 'package:password_manager/model/base_response_model.dart';
-import 'package:password_manager/model/password_manager/add_password_manager_response.dart';
-import 'package:password_manager/model/password_manager/password_manager_response_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../model/password_manager/password_manager.dart';
+import 'response/add_password_manager_response.dart';
+import 'response/auth_response.dart';
+import 'response/password_manager_response.dart';
 
 class ApiService {
   static const String baseUrl = "https://paman-api.herokuapp.com/api/v1";
@@ -57,7 +58,8 @@ class ApiService {
   }
 
   // password manager
-  Future<List<Paman>?> getPasswordManagerByUserId(String userId) async {
+  Future<List<PasswordManager>?> getPasswordManagerByUserId(
+      String userId) async {
     try {
       final response = await client.get(
           Uri.parse('$baseUrl/password-manager/user/$userId'),

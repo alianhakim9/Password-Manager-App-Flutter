@@ -5,7 +5,7 @@
 import 'dart:convert';
 
 import 'package:password_manager/api/response/base_response.dart';
-import 'package:password_manager/model/password_manager.dart';
+import 'package:password_manager/model/password_manager/password_manager.dart';
 
 AddPasswordManagerResponse addPasswordManagerResponseFromJson(String str) =>
     AddPasswordManagerResponse.fromJson(json.decode(str));

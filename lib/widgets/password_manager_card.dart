@@ -1,13 +1,19 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:password_manager/model/password_manager/password_manager_response_model.dart';
+import 'package:flutter/services.dart';
+import 'package:password_manager/model/password_manager/password_manager.dart';
 
-Widget PasswordManagerCard(Paman data) {
+import '../view/password_manager_pages/detail_password_manager.dart';
+
+Widget PasswordManagerCard(BuildContext context, PasswordManager data) {
   return Padding(
     padding: const EdgeInsets.only(top: 10, bottom: 10),
     child: InkWell(
-      onTap: () => log('onTap!'),
+      onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => DetailPasswordManager(
+                    data: data,
+                  ))),
       child: Row(
         children: [
           const Expanded(
@@ -33,8 +39,14 @@ Widget PasswordManagerCard(Paman data) {
               )),
           Expanded(
               flex: 2,
-              child:
-                  IconButton(onPressed: () {}, icon: const Icon(Icons.copy))),
+              child: IconButton(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: data.pmPassword))
+                        .then((value) => ScaffoldMessenger.of(context)
+                            .showSnackBar(const SnackBar(
+                                content: Text('Password berhasil di copy'))));
+                  },
+                  icon: const Icon(Icons.copy))),
           Expanded(
               flex: 1,
               child: IconButton(
