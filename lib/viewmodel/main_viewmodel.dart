@@ -15,4 +15,8 @@ class MainViewModel {
       String username, String password, String website, String userId) {
     return _apiService.addPasswordManager(username, password, website, userId);
   }
+
+  Future deletePasswordManager(String id) {
+    return _apiService.deletePasswordManager(id);
+  }
 }

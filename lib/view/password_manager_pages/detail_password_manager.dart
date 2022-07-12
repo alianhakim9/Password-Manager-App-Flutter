@@ -52,6 +52,7 @@ class _DetailPasswordManagerState extends State<DetailPasswordManager> {
               ),
               centerTitle: true,
             ),
+            actions: [IconButton(onPressed: () {}, icon: Icon(Icons.edit))],
           ),
           SliverToBoxAdapter(
               child: Padding(

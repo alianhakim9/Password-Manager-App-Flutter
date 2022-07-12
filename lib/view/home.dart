@@ -63,7 +63,9 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-    getData();
+    setState(() {
+      getData();
+    });
   }
 
   @override
@@ -110,7 +112,9 @@ class _HomeState extends State<Home> {
                         padding: const EdgeInsets.only(
                             bottom: kFloatingActionButtonMargin + 48),
                         itemBuilder: (context, i) {
-                          return PasswordManagerCard(context, passwords[i]);
+                          return PasswordManagerCard(
+                            data: passwords[i],
+                          );
                         },
                         itemCount: passwords.length,
                       ),

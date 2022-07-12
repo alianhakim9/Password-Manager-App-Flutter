@@ -104,4 +104,24 @@ class ApiService {
       throw const SocketException('tidak ada koneksi internet');
     }
   }
+
+  Future<AuthResponse?> deletePasswordManager(String id) async {
+    try {
+      final response = await client.delete(
+        Uri.parse('$baseUrl/password-manager/$id'),
+        headers: {
+          'Accept': 'application/json',
+        },
+      );
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
+        AuthResponse authResponse = AuthResponse.fromJson(jsonResponse);
+        return authResponse;
+      } else {
+        return null;
+      }
+    } on SocketException catch (e) {
+      throw const SocketException('tidak ada koneksi internet');
+    }
+  }
 }
