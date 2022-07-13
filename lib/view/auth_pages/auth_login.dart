@@ -41,7 +41,7 @@ class _LoginState extends State<Login> {
         .showSnackBar(SnackBar(content: Text(message)));
   }
 
-  void doLogin() {
+  void doLogin() async {
     showLoading();
     viewModel.login(username, password).then((value) {
       String? userId = value?.data.toString();

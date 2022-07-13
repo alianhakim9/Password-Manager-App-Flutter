@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:password_manager/view/home.dart';
 import 'package:password_manager/viewmodel/main_viewmodel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -74,6 +75,9 @@ class _AddPasswordManagerState extends State<AddPasswordManager> {
       if (value != null) {
         hideLoading();
         Navigator.pop(context);
+        Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const Home()),
+            (route) => false);
       } else {
         hideLoading();
         showSnackbar('Gagal menambahkan data');

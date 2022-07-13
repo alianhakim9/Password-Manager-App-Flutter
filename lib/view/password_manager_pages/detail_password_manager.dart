@@ -1,7 +1,8 @@
-import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:password_manager/model/password_manager/password_manager.dart';
+
+import 'update_password_manager.dart';
 
 class DetailPasswordManager extends StatefulWidget {
   const DetailPasswordManager({Key? key, required this.data}) : super(key: key);
@@ -52,7 +53,18 @@ class _DetailPasswordManagerState extends State<DetailPasswordManager> {
               ),
               centerTitle: true,
             ),
-            actions: [IconButton(onPressed: () {}, icon: Icon(Icons.edit))],
+            actions: [
+              IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => UpdatePasswordManager(
+                                  data: data!,
+                                )));
+                  },
+                  icon: const Icon(Icons.edit))
+            ],
           ),
           SliverToBoxAdapter(
               child: Padding(

@@ -1,10 +1,13 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:password_manager/view/password_manager_pages/add_password_manager.dart';
-import 'package:password_manager/viewmodel/main_viewmodel.dart';
-import 'package:password_manager/widgets/password_manager_card.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../model/password_manager/password_manager.dart';
+import '../viewmodel/main_viewmodel.dart';
+import 'password_manager_pages/add_password_manager.dart';
+import 'password_manager_pages/detail_password_manager.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -17,61 +20,45 @@ class _HomeState extends State<Home> {
   final MainViewModel viewModel = MainViewModel();
   List passwords = [];
   bool _showLoading = false;
+  String userId = '';
 
-  void showLoading() {
+  showLoading() {
     setState(() {
       _showLoading = true;
     });
   }
 
-  void hideLoading() {
+  hideLoading() {
     setState(() {
       _showLoading = false;
     });
   }
 
-  void getPasswords(userId) async {
+  _getUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var id = prefs.getString('userId');
+    return id;
+  }
+
+  Future getPasswords() async {
     showLoading();
-    viewModel.getPasswordManager(userId).then((value) {
-      setState(() {
+    _getUserId().then((id) {
+      viewModel.getPasswordManager(id).then((value) {
+        setState(() {
+          hideLoading();
+          passwords = value;
+        });
+      }).catchError((errr) {
         hideLoading();
-        passwords = value;
+        log('error : $errr');
       });
-    }).catchError((errr) {
-      hideLoading();
-      log('error : $errr');
     });
-  }
-
-  void getData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var userId = prefs.getString('userId') ?? false;
-    if (userId != '') {
-      getPasswords(userId);
-    }
-  }
-
-  void clearShared() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.clear();
-  }
-
-  Future refreshData() async {
-    getData();
   }
 
   @override
   void initState() {
+    getPasswords();
     super.initState();
-    setState(() {
-      getData();
-    });
-  }
-
-  @override
-  void dispose() async {
-    super.dispose();
-    clearShared();
   }
 
   @override
@@ -107,14 +94,12 @@ class _HomeState extends State<Home> {
               body: _showLoading
                   ? const LinearProgressIndicator()
                   : RefreshIndicator(
-                      onRefresh: refreshData,
+                      onRefresh: getPasswords,
                       child: ListView.builder(
                         padding: const EdgeInsets.only(
                             bottom: kFloatingActionButtonMargin + 48),
                         itemBuilder: (context, i) {
-                          return PasswordManagerCard(
-                            data: passwords[i],
-                          );
+                          return PasswordManagerCard(context, passwords[i]);
                         },
                         itemCount: passwords.length,
                       ),
@@ -178,6 +163,113 @@ class _HomeState extends State<Home> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget PasswordManagerCard(BuildContext context, PasswordManager data) {
+    void _delete(String id) {
+      viewModel
+          .deletePasswordManager(id)
+          .then((value) => getPasswords())
+          .catchError((err) => log('error $err'));
+    }
+
+    Future<void> _showMyDialog() async {
+      return showDialog<void>(
+        context: context,
+        barrierDismissible: true, // user must tap button!
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(data.pmUsername),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: const <Widget>[
+                  Text('Apakah anda yakin akan menghapus data ini?'),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Hapus'),
+                onPressed: () {
+                  // hapus data
+                  _delete(data.id);
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 10, bottom: 10),
+      child: InkWell(
+        onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => DetailPasswordManager(
+                      data: data,
+                    ))),
+        child: Row(
+          children: [
+            const Expanded(
+              flex: 1,
+              child: Icon(Icons.key),
+            ),
+            const SizedBox(
+              width: 20,
+            ),
+            Expanded(
+                flex: 4,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      data.pmWebsite,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    Text(data.pmUsername)
+                  ],
+                )),
+            Expanded(
+                flex: 2,
+                child: IconButton(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: data.pmPassword))
+                          .then((value) => ScaffoldMessenger.of(context)
+                              .showSnackBar(const SnackBar(
+                                  content: Text('Password berhasil di copy'))));
+                    },
+                    icon: const Icon(Icons.copy))),
+            Expanded(
+                flex: 1,
+                child: PopupMenuButton(
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                        value: 1,
+                        child: Row(
+                          children: const [
+                            Icon(Icons.delete),
+                            SizedBox(
+                              width: 20,
+                            ),
+                            Text('Hapus')
+                          ],
+                        ))
+                  ],
+                  onSelected: (value) {
+                    if (value == 1) {
+                      _showMyDialog();
+                    }
+                  },
+                )),
+          ],
         ),
       ),
     );
