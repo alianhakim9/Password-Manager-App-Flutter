@@ -70,6 +70,8 @@ class _DetailPasswordManagerState extends State<DetailPasswordManager> {
               child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
                   children: [
@@ -86,7 +88,13 @@ class _DetailPasswordManagerState extends State<DetailPasswordManager> {
                     ),
                     Expanded(
                         child: TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: data!.pmUsername))
+                            .then((value) => ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                                    content:
+                                        Text('Username berhasil di copy'))));
+                      },
                       child: const Text('COPY'),
                     ))
                   ],
@@ -125,7 +133,23 @@ class _DetailPasswordManagerState extends State<DetailPasswordManager> {
                       child: const Text('COPY'),
                     ))
                   ],
-                )
+                ),
+                TextFormField(
+                  readOnly: true,
+                  controller: TextEditingController()..text = data!.createdAt,
+                  decoration: const InputDecoration(
+                      border: InputBorder.none, labelText: 'Dibuat'),
+                ),
+                TextFormField(
+                  readOnly: true,
+                  controller: TextEditingController()
+                    ..text = data!.updatedAt == 'null'
+                        ? 'Belum pernah diperbarui'
+                        : data!.updatedAt,
+                  decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      labelText: 'Terakhir diperbarui'),
+                ),
               ],
             ),
           ))
