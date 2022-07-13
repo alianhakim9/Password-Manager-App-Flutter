@@ -5,4 +5,4 @@ Aplikasi Password Manager adalah aplikasi untuk manajemen password dan data-data
 ## PAMAN-API
 
 Aplikasi ini menggunakan REST-API seperti
-berikut: <a href="https://github.com/alianhakim9" target="_blank">PAMAN-API</a>
+berikut: <a href="https://paman-api.herokuapp.com/" target="_blank">PAMAN-API</a>
