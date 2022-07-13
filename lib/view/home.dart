@@ -154,15 +154,47 @@ class _HomeState extends State<Home> {
         ),
         drawer: Drawer(
           child: SafeArea(
-            child: Container(
-              padding: const EdgeInsets.all(20),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: const [Text('test')],
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(
+                        top: 30, left: 30, right: 30, bottom: 10),
+                    child: CircleAvatar(
+                      backgroundColor: Colors.amber[600],
+                      radius: 30,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ),
+              const Padding(
+                padding: EdgeInsets.only(left: 30, right: 30, top: 10),
+                child: Text(
+                  'Alian Hakim',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(
+                height: 20,
+                child: Divider(
+                  height: 5,
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.generating_tokens),
+                title: const Text('Password Generator'),
+                onTap: () {},
+              ),
+              ListTile(
+                leading: const Icon(Icons.settings),
+                title: const Text('Pengaturan'),
+                onTap: () {},
+              ),
+            ],
+          )),
         ),
       ),
     );
