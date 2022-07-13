@@ -1,9 +1,10 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:password_manager/api/password_manager/password_manager_req_res.dart';
+import 'package:password_manager/api/password_manager/password_manager_service.dart';
 import 'package:password_manager/model/password_manager/password_manager.dart';
 import 'package:password_manager/view/home.dart';
-import 'package:password_manager/viewmodel/main_viewmodel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UpdatePasswordManager extends StatefulWidget {
@@ -21,21 +22,19 @@ class _UpdatePasswordManagerState extends State<UpdatePasswordManager> {
   PasswordManager data;
   _UpdatePasswordManagerState(this.data);
 
-  final bool _pinned = true;
-  final bool _snap = false;
-  final bool _floating = false;
-
   bool _isObscure = true;
   bool _isLoading = false;
   String username = '';
   String password = '';
   String website = '';
 
+  final bool _pinned = true;
+  final bool _snap = false;
+  final bool _floating = false;
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _websiteController = TextEditingController();
-
-  MainViewModel viewModel = MainViewModel();
+  final PasswordManagerServiceImpl service = PasswordManagerServiceImpl();
 
   @override
   void initState() {
@@ -62,10 +61,10 @@ class _UpdatePasswordManagerState extends State<UpdatePasswordManager> {
   }
 
   void _update(String username, String password, String website) async {
+    UpdatePasswordManagerRequest request = UpdatePasswordManagerRequest(
+        pmUsername: username, pmPassword: password, pmWebsite: website);
     showLoading();
-    viewModel
-        .updatePasswordManager(username, password, website, data.id)
-        .then((value) {
+    service.update(request, data.id).then((value) {
       Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const Home()),

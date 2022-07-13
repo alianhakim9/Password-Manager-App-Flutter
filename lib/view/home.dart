@@ -2,10 +2,10 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:password_manager/api/password_manager/password_manager_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../model/password_manager/password_manager.dart';
-import '../viewmodel/main_viewmodel.dart';
 import 'password_manager_pages/add_password_manager.dart';
 import 'password_manager_pages/detail_password_manager.dart';
 
@@ -17,7 +17,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final MainViewModel viewModel = MainViewModel();
+  final PasswordManagerServiceImpl service = PasswordManagerServiceImpl();
   List passwords = [];
   bool _showLoading = false;
   String userId = '';
@@ -43,14 +43,20 @@ class _HomeState extends State<Home> {
   Future getPasswords() async {
     showLoading();
     _getUserId().then((id) {
-      viewModel.getPasswordManager(id).then((value) {
-        setState(() {
-          hideLoading();
-          passwords = value;
-        });
-      }).catchError((errr) {
+      service
+          .get(id)
+          .then((value) => {
+                if (value != null)
+                  {
+                    setState(() {
+                      hideLoading();
+                      passwords = value;
+                    })
+                  }
+              })
+          .catchError((err) {
         hideLoading();
-        log('error : $errr');
+        log('Err : $err');
       });
     });
   }
@@ -201,9 +207,9 @@ class _HomeState extends State<Home> {
   }
 
   Widget PasswordManagerCard(BuildContext context, PasswordManager data) {
-    void _delete(String id) {
-      viewModel
-          .deletePasswordManager(id)
+    void _delete(String id) async {
+      service
+          .delete(id)
           .then((value) => getPasswords())
           .catchError((err) => log('error $err'));
     }

@@ -1,6 +1,9 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:password_manager/api/password_manager/password_manager_req_res.dart';
+import 'package:password_manager/api/password_manager/password_manager_service.dart';
 import 'package:password_manager/view/home.dart';
-import 'package:password_manager/viewmodel/main_viewmodel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AddPasswordManager extends StatefulWidget {
@@ -25,7 +28,7 @@ class _AddPasswordManagerState extends State<AddPasswordManager> {
   final TextEditingController _controllerPassword = TextEditingController();
   final TextEditingController _controllerWebsite = TextEditingController();
 
-  MainViewModel viewModel = MainViewModel();
+  final PasswordManagerServiceImpl service = PasswordManagerServiceImpl();
 
   @override
   void initState() {
@@ -67,11 +70,14 @@ class _AddPasswordManagerState extends State<AddPasswordManager> {
     }
   }
 
-  void AddPasswordManager(userId) {
+  void AddPasswordManager(userId) async {
+    AddPasswordManagerRequest request = AddPasswordManagerRequest(
+        pmUsername: username,
+        pmPassword: password,
+        pmWebsite: website,
+        userId: userId);
     showLoading();
-    viewModel
-        .addPasswordManager(username, password, website, userId)
-        .then((value) {
+    service.create(request).then((value) {
       if (value != null) {
         hideLoading();
         Navigator.pop(context);
@@ -80,11 +86,13 @@ class _AddPasswordManagerState extends State<AddPasswordManager> {
             (route) => false);
       } else {
         hideLoading();
+        log('value ${value!.data}');
         showSnackbar('Gagal menambahkan data');
       }
-    }).catchError((err) {
+    }).onError((error, stackTrace) {
       hideLoading();
       showSnackbar('Terjadi kesalahan saat menambahkan data');
+      log('error : $error');
     });
   }
 

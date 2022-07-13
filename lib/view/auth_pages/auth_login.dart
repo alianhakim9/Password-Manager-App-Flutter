@@ -1,9 +1,11 @@
 // ignore_for_file: deprecated_member_use, invalid_return_type_for_catch_error
 
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:password_manager/api/auth/auth.dart';
+import 'package:password_manager/api/auth/auth_service.dart';
 import 'package:password_manager/view/home.dart';
-import 'package:password_manager/viewmodel/auth_viewmodel.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -20,7 +22,7 @@ class _LoginState extends State<Login> {
   String password = '';
   final TextEditingController _controllerUsername = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
-  final AuthViewModel viewModel = AuthViewModel();
+  final AuthServiceImpl service = AuthServiceImpl();
 
   void hideLoading() {
     setState(() {
@@ -41,23 +43,24 @@ class _LoginState extends State<Login> {
         .showSnackBar(SnackBar(content: Text(message)));
   }
 
-  void doLogin() async {
+  void login() async {
+    LoginRequest request = LoginRequest(username: username, password: password);
     showLoading();
-    viewModel.login(username, password).then((value) {
-      String? userId = value?.data.toString();
-      String? message = value?.message.toString();
-      if (userId != 'NULL') {
-        hideLoading();
-        Navigator.of(context).pushAndRemoveUntil(
+    service.login(request).then((value) {
+      hideLoading();
+      log('$value');
+      if (value != null) {
+        Navigator.pushAndRemoveUntil(
+            context,
             MaterialPageRoute(builder: (context) => const Home()),
             (route) => false);
       } else {
-        hideLoading();
-        showSnackbar(message!);
+        showSnackbar('Login gagal, cek kembali email dan password');
       }
     }).catchError((err) {
       hideLoading();
-      showSnackbar('Tidak dapat terhubung ke server');
+      log('err $err');
+      showSnackbar('Terjadi kesalahan server');
     });
   }
 
@@ -139,11 +142,7 @@ class _LoginState extends State<Login> {
                       height: 30,
                     ),
                     ElevatedButton(
-                      onPressed: _isButtonActive
-                          ? () {
-                              doLogin();
-                            }
-                          : null,
+                      onPressed: _isButtonActive ? () => login() : null,
                       style:
                           ElevatedButton.styleFrom(primary: Colors.amber[600]),
                       child: _isLoading

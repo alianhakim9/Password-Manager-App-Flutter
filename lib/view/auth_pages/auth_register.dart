@@ -1,8 +1,9 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:password_manager/api/auth/auth.dart';
+import 'package:password_manager/api/auth/auth_service.dart';
 import 'package:password_manager/view/auth_pages/auth_login.dart';
-import 'package:password_manager/viewmodel/auth_viewmodel.dart';
 
 class Register extends StatefulWidget {
   const Register({Key? key}) : super(key: key);
@@ -21,7 +22,7 @@ class _RegisterState extends State<Register> {
   final TextEditingController _controllerName = TextEditingController();
   final TextEditingController _controllerUsername = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
-  final AuthViewModel viewModel = AuthViewModel();
+  AuthServiceImpl service = AuthServiceImpl();
 
   void hideLoading() {
     setState(() {
@@ -42,13 +43,13 @@ class _RegisterState extends State<Register> {
         .showSnackBar(SnackBar(content: Text(message), action: myAction));
   }
 
-  void doRegister() {
+  void register() async {
+    RegisterRequest request =
+        RegisterRequest(name: name, username: username, password: password);
     showLoading();
-    viewModel.register(name, username, password).then((value) {
-      String? userId = value?.data.toString();
-      String? message = value?.message.toString();
-      if (userId != 'NULL') {
-        hideLoading();
+    service.register(request).then((value) {
+      hideLoading();
+      if (value != null) {
         showSnackbar(
             'berhasil mendaftar',
             SnackBarAction(
@@ -58,17 +59,13 @@ class _RegisterState extends State<Register> {
                       MaterialPageRoute(builder: (context) => const Login()),
                       (route) => false);
                 }));
-      } else if (value!.status == 'CONFLICT') {
-        hideLoading();
+      } else {
         showSnackbar('username sudah terdaftar',
             SnackBarAction(label: 'OK', onPressed: () {}));
-      } else {
-        hideLoading();
-        showSnackbar(message!, SnackBarAction(label: 'OK', onPressed: () {}));
       }
     }).catchError((err) {
       hideLoading();
-      showSnackbar('Tidak dapat terhubung ke server',
+      showSnackbar('Terjadi kesalahan server',
           SnackBarAction(label: 'OK', onPressed: () {}));
     });
   }
@@ -165,11 +162,7 @@ class _RegisterState extends State<Register> {
                       height: 30,
                     ),
                     ElevatedButton(
-                      onPressed: _isButtonActive
-                          ? () {
-                              doRegister();
-                            }
-                          : null,
+                      onPressed: _isButtonActive ? () => register() : null,
                       style:
                           ElevatedButton.styleFrom(primary: Colors.amber[600]),
                       child: _isLoading
