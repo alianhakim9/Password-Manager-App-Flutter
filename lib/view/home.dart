@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:password_manager/api/password_manager/password_manager_service.dart';
+import 'package:password_manager/view/password_generator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../model/password_manager/password_manager.dart';
@@ -192,7 +193,13 @@ class _HomeState extends State<Home> {
               ListTile(
                 leading: const Icon(Icons.generating_tokens),
                 title: const Text('Password Generator'),
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              const PasswordGeneratorPages()));
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.settings),
