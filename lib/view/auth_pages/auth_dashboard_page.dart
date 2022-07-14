@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'auth_login.dart';
-import 'auth_register.dart';
+import 'auth_login_page.dart';
+import 'auth_register_page.dart';
 
 class AuthDashboard extends StatelessWidget {
   const AuthDashboard({Key? key}) : super(key: key);

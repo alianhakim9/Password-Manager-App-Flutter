@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:password_manager/view/auth_pages/auth_dashboard.dart';
+import 'package:password_manager/view/auth_pages/auth_dashboard_page.dart';
 
 void main() => runApp(MaterialApp(
       home: const AuthDashboard(),

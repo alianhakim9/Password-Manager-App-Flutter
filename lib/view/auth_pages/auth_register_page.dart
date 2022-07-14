@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:password_manager/api/auth/auth.dart';
 import 'package:password_manager/api/auth/auth_service.dart';
-import 'package:password_manager/view/auth_pages/auth_login.dart';
+import 'package:password_manager/view/auth_pages/auth_login_page.dart';
 
 class Register extends StatefulWidget {
   const Register({Key? key}) : super(key: key);

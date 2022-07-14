@@ -6,9 +6,9 @@ import 'package:password_manager/api/password_manager/password_manager_service.d
 import 'package:password_manager/view/password_generator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../model/password_manager/password_manager.dart';
-import 'password_manager_pages/add_password_manager.dart';
-import 'password_manager_pages/detail_password_manager.dart';
+import '../model/password_manager_model.dart';
+import 'password_manager_pages/add_password_manager_page.dart';
+import 'password_manager_pages/detail_password_manager_page.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);

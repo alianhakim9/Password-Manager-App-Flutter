@@ -1,5 +1,5 @@
 import 'package:password_manager/utils/base_response.dart';
-import 'package:password_manager/model/password_manager/password_manager.dart';
+import 'package:password_manager/model/password_manager_model.dart';
 
 class AddPasswordManagerRequest {
   AddPasswordManagerRequest(

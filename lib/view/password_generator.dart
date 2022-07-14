@@ -18,17 +18,17 @@ class _PasswordGeneratorPagesState extends State<PasswordGeneratorPages> {
     bool hasNumber = false,
     bool hasSpecial = false,
   }) {
-    final length = 20;
-    final letterLowerCase = 'abcdefghijklmnopqrstuvwxyz';
-    final letterUpperCase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    final numbers = '0123456789';
-    final special = '@#=+!\$%&?(){}';
+    const length = 20;
+    const letterLowerCase = 'abcdefghijklmnopqrstuvwxyz';
+    const letterUpperCase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const numbers = '0123456789';
+    const special = '@#=+!\$%&?(){}';
 
     String chars = '';
 
     if (hasLetters) chars += '$letterLowerCase$letterUpperCase';
-    if (hasNumber) chars += '$numbers';
-    if (hasSpecial) chars += '$special';
+    if (hasNumber) chars += numbers;
+    if (hasSpecial) chars += special;
 
     return List.generate(length, (index) {
       final indexRandom = Random.secure().nextInt(chars.length);

@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:password_manager/api/password_manager/password_manager_req_res.dart';
 import 'package:password_manager/api/password_manager/password_manager_service.dart';
-import 'package:password_manager/model/password_manager/password_manager.dart';
+import 'package:password_manager/model/password_manager_model.dart';
 import 'package:password_manager/view/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

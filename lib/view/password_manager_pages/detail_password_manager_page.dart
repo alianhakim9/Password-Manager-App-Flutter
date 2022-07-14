@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:password_manager/model/password_manager/password_manager.dart';
+import 'package:password_manager/model/password_manager_model.dart';
 
-import 'update_password_manager.dart';
+import 'update_password_manager_page.dart';
 
 class DetailPasswordManager extends StatefulWidget {
   const DetailPasswordManager({Key? key, required this.data}) : super(key: key);
