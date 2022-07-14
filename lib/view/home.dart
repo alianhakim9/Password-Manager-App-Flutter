@@ -1,14 +1,15 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:password_manager/api/notes/note_service.dart';
 import 'package:password_manager/api/password_manager/password_manager_service.dart';
+import 'package:password_manager/cards/note_card.dart';
+import 'package:password_manager/view/note_pages/add_note_page.dart';
 import 'package:password_manager/view/password_generator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../model/password_manager_model.dart';
+import '../cards/password_manager_card.dart';
 import 'password_manager_pages/add_password_manager_page.dart';
-import 'password_manager_pages/detail_password_manager_page.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -19,7 +20,9 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final PasswordManagerServiceImpl service = PasswordManagerServiceImpl();
+  final NoteServiceImpl noteService = NoteServiceImpl();
   List passwords = [];
+  List notes = [];
   bool _showLoading = false;
   String userId = '';
 
@@ -41,7 +44,7 @@ class _HomeState extends State<Home> {
     return id;
   }
 
-  Future getPasswords() async {
+  Future getData() async {
     showLoading();
     _getUserId().then((id) {
       service
@@ -59,12 +62,25 @@ class _HomeState extends State<Home> {
         hideLoading();
         log('Err : $err');
       });
+
+      noteService.get(id).then((value) {
+        if (value != null) {
+          setState(() {
+            hideLoading();
+            notes = value;
+          });
+        }
+        log('note : $id');
+      }).catchError((err) {
+        hideLoading();
+        log('note service error :$err');
+      });
     });
   }
 
   @override
   void initState() {
-    getPasswords();
+    getData();
     super.initState();
   }
 
@@ -99,9 +115,11 @@ class _HomeState extends State<Home> {
           children: [
             Scaffold(
               body: _showLoading
-                  ? const LinearProgressIndicator()
+                  ? const Center(
+                      child: CircularProgressIndicator(),
+                    )
                   : RefreshIndicator(
-                      onRefresh: getPasswords,
+                      onRefresh: getData,
                       child: ListView.builder(
                         padding: const EdgeInsets.only(
                             bottom: kFloatingActionButtonMargin + 48),
@@ -130,8 +148,29 @@ class _HomeState extends State<Home> {
               ),
             ),
             Scaffold(
+              body: _showLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: getData,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.only(
+                            bottom: kFloatingActionButtonMargin + 48),
+                        itemBuilder: (context, i) {
+                          // tambah kondisi if empty
+                          return NoteCard(context, notes[i]);
+                        },
+                        itemCount: notes.length,
+                      ),
+                    ),
               floatingActionButton: FloatingActionButton.extended(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const AddNotePage()));
+                },
                 label: const Text(
                   'Tambah Catatan',
                   style: TextStyle(color: Colors.white),
@@ -144,6 +183,19 @@ class _HomeState extends State<Home> {
               ),
             ),
             Scaffold(
+              body: _showLoading
+                  ? const CircularProgressIndicator()
+                  : RefreshIndicator(
+                      onRefresh: getData,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.only(
+                            bottom: kFloatingActionButtonMargin + 48),
+                        itemBuilder: (context, i) {
+                          return PasswordManagerCard(context, passwords[i]);
+                        },
+                        itemCount: passwords.length,
+                      ),
+                    ),
               floatingActionButton: FloatingActionButton.extended(
                 onPressed: () {},
                 label: const Text(
@@ -208,113 +260,6 @@ class _HomeState extends State<Home> {
               ),
             ],
           )),
-        ),
-      ),
-    );
-  }
-
-  Widget PasswordManagerCard(BuildContext context, PasswordManager data) {
-    void _delete(String id) async {
-      service
-          .delete(id)
-          .then((value) => getPasswords())
-          .catchError((err) => log('error $err'));
-    }
-
-    Future<void> _showMyDialog() async {
-      return showDialog<void>(
-        context: context,
-        barrierDismissible: true, // user must tap button!
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text(data.pmUsername),
-            content: SingleChildScrollView(
-              child: ListBody(
-                children: const <Widget>[
-                  Text('Apakah anda yakin akan menghapus data ini?'),
-                ],
-              ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Hapus'),
-                onPressed: () {
-                  // hapus data
-                  _delete(data.id);
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          );
-        },
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 10, bottom: 10),
-      child: InkWell(
-        onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => DetailPasswordManager(
-                      data: data,
-                    ))),
-        child: Row(
-          children: [
-            const Expanded(
-              flex: 1,
-              child: Icon(Icons.key),
-            ),
-            const SizedBox(
-              width: 20,
-            ),
-            Expanded(
-                flex: 4,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      data.pmWebsite,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    Text(data.pmUsername)
-                  ],
-                )),
-            Expanded(
-                flex: 2,
-                child: IconButton(
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: data.pmPassword))
-                          .then((value) => ScaffoldMessenger.of(context)
-                              .showSnackBar(const SnackBar(
-                                  content: Text('Password berhasil di copy'))));
-                    },
-                    icon: const Icon(Icons.copy))),
-            Expanded(
-                flex: 1,
-                child: PopupMenuButton(
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                        value: 1,
-                        child: Row(
-                          children: const [
-                            Icon(Icons.delete),
-                            SizedBox(
-                              width: 20,
-                            ),
-                            Text('Hapus')
-                          ],
-                        ))
-                  ],
-                  onSelected: (value) {
-                    if (value == 1) {
-                      _showMyDialog();
-                    }
-                  },
-                )),
-          ],
         ),
       ),
     );
