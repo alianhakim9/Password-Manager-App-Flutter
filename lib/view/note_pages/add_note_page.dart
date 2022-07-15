@@ -101,7 +101,8 @@ class _AddNotePageState extends State<AddNotePage> {
             flexibleSpace: const FlexibleSpaceBar(
               title: Text('Tambah Catatan'),
               background: Icon(
-                Icons.key,
+                Icons.note_add_outlined,
+                size: 50,
               ),
             ),
             actions: [
@@ -121,10 +122,8 @@ class _AddNotePageState extends State<AddNotePage> {
                       child: Column(
                         children: [
                           TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'Title',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: const InputDecoration.collapsed(
+                                hintText: "Title"),
                             onChanged: (e) => {noteTitle = e},
                             controller: _controllerTitle,
                           ),
@@ -136,6 +135,10 @@ class _AddNotePageState extends State<AddNotePage> {
                             enableSuggestions: false,
                             autocorrect: false,
                             controller: _controllerDescription,
+                            maxLines:
+                                MediaQuery.of(context).size.height.toInt(),
+                            decoration: const InputDecoration.collapsed(
+                                hintText: "Deskripsi"),
                           ),
                         ],
                       ),

@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:password_manager/api/notes/note_service.dart';
 import 'package:password_manager/model/note_model.dart';
+import 'package:password_manager/view/note_pages/detail_note_page.dart';
 
 import '../view/home.dart';
 
@@ -37,7 +38,7 @@ Widget NoteCard(BuildContext context, Note data) {
             TextButton(
               child: const Text('Hapus'),
               onPressed: () {
-                // _delete(data.id);
+                _delete(data.id);
                 Navigator.pop(context);
               },
             ),
@@ -50,12 +51,19 @@ Widget NoteCard(BuildContext context, Note data) {
   return Padding(
     padding: const EdgeInsets.only(top: 10, bottom: 10),
     child: InkWell(
-      onTap: () {},
+      onTap: () {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => NoteDetailPage(
+                      data: data,
+                    )));
+      },
       child: Row(
         children: [
           const Expanded(
             flex: 1,
-            child: Icon(Icons.key),
+            child: Icon(Icons.notes),
           ),
           const SizedBox(
             width: 20,
@@ -71,7 +79,10 @@ Widget NoteCard(BuildContext context, Note data) {
                     style: const TextStyle(
                         fontWeight: FontWeight.bold, fontSize: 16),
                   ),
-                  Text(data.noteDescription)
+                  Text(
+                    data.noteDescription,
+                    overflow: TextOverflow.ellipsis,
+                  )
                 ],
               )),
           Expanded(

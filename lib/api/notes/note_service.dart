@@ -88,12 +88,15 @@ class NoteServiceImpl extends NoteInterface {
           },
           body: json.encode(request.toJson()));
       if (response.statusCode == 200) {
+        log(response.body);
         final jsonResponse = jsonDecode(response.body);
         return NoteResponse.fromJson(jsonResponse);
       } else {
+        log(response.body);
         return null;
       }
     } catch (e) {
+      log('error kesini');
       throw const SocketException('tidak ada koneksi internet');
     }
   }
