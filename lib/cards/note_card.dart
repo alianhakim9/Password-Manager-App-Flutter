@@ -1,23 +1,26 @@
-import 'dart:developer';
+// ignore_for_file: non_constant_identifier_names
 
 import 'package:flutter/material.dart';
 import 'package:password_manager/api/notes/note_service.dart';
 import 'package:password_manager/model/note_model.dart';
+import 'package:password_manager/view/home.dart';
 import 'package:password_manager/view/note_pages/detail_note_page.dart';
 
-import '../view/home.dart';
+import 'package:password_manager/utils/helper.dart' as global;
 
 Widget NoteCard(BuildContext context, Note data) {
   final NoteServiceImpl service = NoteServiceImpl();
 
   void _delete(String id) async {
+    global.showLoaderDialog(context);
     service
         .delete(id)
-        .then((value) => Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const Home()),
-            (route) => false))
-        .catchError((err) => log('error $err'));
+        .then((value) =>
+            global.customPushRemoveNavigator(context, const HomePage()))
+        .catchError((err) {
+      Navigator.pop(context);
+      global.showSnackbar(context, 'Gagal menghapus data');
+    });
   }
 
   Future<void> _showMyDialog() async {
@@ -36,10 +39,13 @@ Widget NoteCard(BuildContext context, Note data) {
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Hapus'),
+              child: const Text(
+                'Hapus',
+                style: TextStyle(color: Colors.red),
+              ),
               onPressed: () {
-                _delete(data.id);
                 Navigator.pop(context);
+                _delete(data.id);
               },
             ),
           ],
@@ -52,18 +58,13 @@ Widget NoteCard(BuildContext context, Note data) {
     padding: const EdgeInsets.only(top: 10, bottom: 10),
     child: InkWell(
       onTap: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => NoteDetailPage(
-                      data: data,
-                    )));
+        global.customPushOnlyNavigator(context, NoteDetailPage(data: data));
       },
       child: Row(
         children: [
           const Expanded(
             flex: 1,
-            child: Icon(Icons.notes),
+            child: Icon(Icons.note_outlined),
           ),
           const SizedBox(
             width: 20,
@@ -86,27 +87,39 @@ Widget NoteCard(BuildContext context, Note data) {
                 ],
               )),
           Expanded(
-              flex: 1,
-              child: PopupMenuButton(
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                      value: 1,
-                      child: Row(
-                        children: const [
-                          Icon(Icons.delete),
-                          SizedBox(
-                            width: 20,
+              child: IconButton(
+            onPressed: () {
+              showModalBottomSheet(
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20))),
+                  context: context,
+                  builder: (context) {
+                    return Container(
+                        child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          leading: const Icon(
+                            Icons.delete,
+                            color: Colors.red,
                           ),
-                          Text('Hapus')
-                        ],
-                      ))
-                ],
-                onSelected: (value) {
-                  if (value == 1) {
-                    _showMyDialog();
-                  }
-                },
-              )),
+                          title: const Text(
+                            'Hapus',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                          onTap: () {
+                            Navigator.pop(context);
+                            _showMyDialog();
+                          },
+                        ),
+                      ],
+                    ));
+                  });
+            },
+            icon: const Icon(Icons.more_vert),
+          ))
         ],
       ),
     ),

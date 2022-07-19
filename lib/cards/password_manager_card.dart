@@ -1,24 +1,26 @@
-import 'dart:developer';
+// ignore_for_file: non_constant_identifier_names
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:password_manager/api/password_manager/password_manager_service.dart';
+import 'package:password_manager/model/password_manager_model.dart';
+import 'package:password_manager/view/home.dart';
+import 'package:password_manager/view/password_manager_pages/detail_password_manager_page.dart';
 
-import '../api/password_manager/password_manager_service.dart';
-import '../model/password_manager_model.dart';
-import '../view/home.dart';
-import '../view/password_manager_pages/detail_password_manager_page.dart';
+import 'package:password_manager/utils/helper.dart' as global;
 
 Widget PasswordManagerCard(BuildContext context, PasswordManager data) {
   final PasswordManagerServiceImpl service = PasswordManagerServiceImpl();
 
   void _delete(String id) async {
+    global.showLoaderDialog(context);
     service
         .delete(id)
-        .then((value) => Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const Home()),
-            (route) => false))
-        .catchError((err) => log('error $err'));
+        .then((value) =>
+            global.customPushRemoveNavigator(context, const HomePage()))
+        .catchError((err) {
+      Navigator.pop(context);
+      global.showSnackbar(context, 'Gagal menghapus data');
+    });
   }
 
   Future<void> _showMyDialog() async {
@@ -37,10 +39,13 @@ Widget PasswordManagerCard(BuildContext context, PasswordManager data) {
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Hapus'),
+              child: const Text(
+                'Hapus',
+                style: TextStyle(color: Colors.red),
+              ),
               onPressed: () {
-                _delete(data.id);
                 Navigator.pop(context);
+                _delete(data.id);
               },
             ),
           ],
@@ -52,17 +57,22 @@ Widget PasswordManagerCard(BuildContext context, PasswordManager data) {
   return Padding(
     padding: const EdgeInsets.only(top: 10, bottom: 10),
     child: InkWell(
-      onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => DetailPasswordManager(
-                    data: data,
-                  ))),
+      onTap: () => global.customPushOnlyNavigator(
+          context, DetailPasswordManager(data: data)),
       child: Row(
         children: [
-          const Expanded(
-            flex: 1,
-            child: Icon(Icons.key),
+          Expanded(
+            flex: 2,
+            child: Container(
+              width: 100,
+              height: 50,
+              margin: const EdgeInsets.only(left: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(5.0),
+                color: Colors.grey[300],
+              ),
+              child: const Icon(Icons.key),
+            ),
           ),
           const SizedBox(
             width: 20,
@@ -85,34 +95,61 @@ Widget PasswordManagerCard(BuildContext context, PasswordManager data) {
               flex: 2,
               child: IconButton(
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: data.pmPassword))
-                        .then((value) => ScaffoldMessenger.of(context)
-                            .showSnackBar(const SnackBar(
-                                content: Text('Password berhasil di copy'))));
+                    global.copyData(context, data.pmPassword, 'Password');
                   },
                   icon: const Icon(Icons.copy))),
           Expanded(
-              flex: 1,
-              child: PopupMenuButton(
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                      value: 1,
-                      child: Row(
-                        children: const [
-                          Icon(Icons.delete),
-                          SizedBox(
-                            width: 20,
+              child: IconButton(
+            onPressed: () {
+              showModalBottomSheet(
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20))),
+                  context: context,
+                  builder: (context) {
+                    return Container(
+                        child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.copy),
+                          title: const Text('Copy username'),
+                          onTap: () {
+                            global.copyData(
+                                context, data.pmUsername, 'Username');
+                            Navigator.pop(context);
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.copy),
+                          title: const Text('Copy password'),
+                          onTap: () {
+                            global.copyData(
+                                context, data.pmPassword, 'Password');
+                            Navigator.pop(context);
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(
+                            Icons.delete,
+                            color: Colors.red,
                           ),
-                          Text('Hapus')
-                        ],
-                      ))
-                ],
-                onSelected: (value) {
-                  if (value == 1) {
-                    _showMyDialog();
-                  }
-                },
-              )),
+                          title: const Text(
+                            'Hapus',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                          onTap: () {
+                            Navigator.pop(context);
+                            _showMyDialog();
+                          },
+                        ),
+                      ],
+                    ));
+                  });
+            },
+            icon: const Icon(Icons.more_vert),
+          ))
         ],
       ),
     ),

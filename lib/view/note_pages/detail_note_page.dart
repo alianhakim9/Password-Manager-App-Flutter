@@ -1,13 +1,13 @@
+// ignore_for_file: no_logic_in_create_state, must_be_immutable
+
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:password_manager/api/notes/note_req_res.dart';
 import 'package:password_manager/api/notes/note_service.dart';
+import 'package:password_manager/model/note_model.dart';
+import 'package:password_manager/view/home.dart';
 import 'package:password_manager/view/note_pages/update_note_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../model/note_model.dart';
-import '../home.dart';
+import 'package:password_manager/utils/helper.dart' as global;
 
 class NoteDetailPage extends StatefulWidget {
   NoteDetailPage({
@@ -27,20 +27,12 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
   @override
   Widget build(BuildContext context) {
     final NoteServiceImpl service = NoteServiceImpl();
-    final TextEditingController _controllerTitle = TextEditingController();
-    late final TextEditingController _controllerDescription =
-        TextEditingController();
-
-    String title = '';
-    String description = '';
 
     void _delete(String id) async {
       service
           .delete(id)
-          .then((value) => Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const Home()),
-              (route) => false))
+          .then((value) =>
+              global.customPushRemoveNavigator(context, const HomePage()))
           .catchError((err) => log('error $err'));
     }
 
@@ -60,13 +52,13 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
             ),
             actions: <Widget>[
               TextButton(
-                child: const Text('Hapus'),
+                child: const Text(
+                  'Hapus',
+                  style: TextStyle(color: Colors.red),
+                ),
                 onPressed: () {
                   _delete('data.id');
-                  Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (context) => const Home()),
-                      (route) => false);
+                  global.customPushRemoveNavigator(context, const HomePage());
                 },
               ),
             ],
@@ -77,6 +69,7 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
 
     return Scaffold(
       appBar: AppBar(
+        title: const Text('Detail Catatan'),
         actions: [
           PopupMenuButton(
             itemBuilder: (context) => [
@@ -87,16 +80,13 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
               if (value == 1) {
                 _showMyDialog();
               } else {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => UpdateNotePage(
-                              data: data!,
-                            )));
+                global.customPushOnlyNavigator(
+                    context, UpdateNotePage(data: data!));
               }
             },
           )
         ],
+        backgroundColor: Colors.amber[600],
       ),
       body: Padding(
         padding: const EdgeInsets.only(left: 30.0, right: 30.0, top: 30),
@@ -119,7 +109,24 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
               const SizedBox(
                 height: 10,
               ),
-              SelectableText(data!.noteDescription)
+              Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(5),
+                    ),
+                  ),
+                  child: SizedBox(
+                    width: 300,
+                    height: MediaQuery.of(context).size.height,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SelectableText(data!.noteDescription),
+                    ),
+                  )),
             ],
           ),
         ),

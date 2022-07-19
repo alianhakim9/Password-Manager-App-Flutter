@@ -1,3 +1,5 @@
+// ignore_for_file: must_be_immutable, no_logic_in_create_state
+
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
@@ -5,7 +7,8 @@ import 'package:password_manager/api/password_manager/password_manager_req_res.d
 import 'package:password_manager/api/password_manager/password_manager_service.dart';
 import 'package:password_manager/model/password_manager_model.dart';
 import 'package:password_manager/view/home.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:password_manager/utils/helper.dart' as global;
 
 class UpdatePasswordManager extends StatefulWidget {
   UpdatePasswordManager({Key? key, required this.data}) : super(key: key);
@@ -48,6 +51,14 @@ class _UpdatePasswordManagerState extends State<UpdatePasswordManager> {
     website = data.pmWebsite;
   }
 
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    _usernameController.dispose();
+    _websiteController.dispose();
+    super.dispose();
+  }
+
   void showLoading() {
     setState(() {
       _isLoading = true;
@@ -61,18 +72,25 @@ class _UpdatePasswordManagerState extends State<UpdatePasswordManager> {
   }
 
   void _update(String username, String password, String website) async {
-    UpdatePasswordManagerRequest request = UpdatePasswordManagerRequest(
-        pmUsername: username, pmPassword: password, pmWebsite: website);
-    showLoading();
-    service.update(request, data.id).then((value) {
-      Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const Home()),
-          (route) => false);
-    }).catchError((err) {
-      hideLoading();
-      log('err $err');
-    });
+    if (username != '' && password != '' && website != '') {
+      UpdatePasswordManagerRequest request = UpdatePasswordManagerRequest(
+          pmUsername: username, pmPassword: password, pmWebsite: website);
+      showLoading();
+      service.update(request, data.id).then((value) {
+        hideLoading();
+        global.showSnackbar(context, 'Data berhasil di update');
+        Future.delayed(const Duration(milliseconds: 2000), () {
+          setState(() {
+            global.customPushRemoveNavigator(context, const HomePage());
+          });
+        });
+      }).catchError((err) {
+        hideLoading();
+        log('err $err');
+      });
+    } else {
+      global.showSnackbar(context, 'Tidak boleh kosong');
+    }
   }
 
   void showSnackbar(String message) {
@@ -95,52 +113,57 @@ class _UpdatePasswordManagerState extends State<UpdatePasswordManager> {
               ),
             ),
             actions: [
-              IconButton(
-                  onPressed: () {
-                    _update(username, password, website);
-                  },
-                  icon: const Icon(Icons.done))
+              _isLoading
+                  ? Center(
+                      child: Container(
+                          width: 16,
+                          height: 16,
+                          margin: const EdgeInsets.only(right: 30),
+                          child: CircularProgressIndicator(
+                            color: Colors.grey[800],
+                          )),
+                    )
+                  : IconButton(
+                      onPressed: () {
+                        _update(username, password, website);
+                      },
+                      icon: const Icon(Icons.done))
             ],
+            backgroundColor: Colors.amber[600],
           ),
           SliverToBoxAdapter(
-              child: _isLoading
-                  ? const LinearProgressIndicator()
-                  : Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            controller: _usernameController,
-                            onChanged: (e) => username = e,
-                            decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                labelText: 'Username'),
-                          ),
-                          TextFormField(
-                              controller: _passwordController,
-                              obscureText: _isObscure,
-                              onChanged: (e) => password = e,
-                              decoration: InputDecoration(
-                                  border: InputBorder.none,
-                                  labelText: 'Password',
-                                  suffixIcon: IconButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          _isObscure = !_isObscure;
-                                        });
-                                      },
-                                      icon: Icon(_isObscure
-                                          ? Icons.visibility
-                                          : Icons.visibility_off)))),
-                          TextFormField(
-                            controller: _websiteController,
-                            onChanged: (e) => website = e,
-                            decoration: const InputDecoration(
-                                border: InputBorder.none, labelText: 'Website'),
-                          ),
-                        ],
-                      ),
-                    ))
+              child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _usernameController,
+                  onChanged: (e) => username = e,
+                  decoration: const InputDecoration(labelText: 'Username'),
+                ),
+                TextFormField(
+                    controller: _passwordController,
+                    obscureText: _isObscure,
+                    onChanged: (e) => password = e,
+                    decoration: InputDecoration(
+                        labelText: 'Password',
+                        suffixIcon: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _isObscure = !_isObscure;
+                              });
+                            },
+                            icon: Icon(_isObscure
+                                ? Icons.visibility
+                                : Icons.visibility_off)))),
+                TextFormField(
+                  controller: _websiteController,
+                  onChanged: (e) => website = e,
+                  decoration: const InputDecoration(labelText: 'Website'),
+                ),
+              ],
+            ),
+          ))
         ],
       ),
     );

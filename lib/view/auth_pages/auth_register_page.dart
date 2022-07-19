@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:password_manager/api/auth/auth.dart';
 import 'package:password_manager/api/auth/auth_service.dart';
 import 'package:password_manager/view/auth_pages/auth_login_page.dart';
+import 'package:password_manager/utils/helper.dart' as global;
 
 class Register extends StatefulWidget {
   const Register({Key? key}) : super(key: key);
@@ -15,7 +16,6 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   bool _isObscure = true;
   bool _isLoading = false;
-  bool _isButtonActive = false;
   String username = '';
   String password = '';
   String name = '';
@@ -27,70 +27,67 @@ class _RegisterState extends State<Register> {
   void hideLoading() {
     setState(() {
       _isLoading = false;
-      _isButtonActive = true;
     });
   }
 
   void showLoading() {
     setState(() {
       _isLoading = true;
-      _isButtonActive = false;
     });
   }
 
-  void showSnackbar(String message, SnackBarAction myAction) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message), action: myAction));
+  void _setFieldEmpty() {
+    setState(() {
+      _controllerName.text = '';
+      _controllerUsername.text = '';
+      _controllerPassword.text = '';
+      username = '';
+      password = '';
+      name = '';
+    });
   }
 
   void register() async {
     RegisterRequest request =
         RegisterRequest(name: name, username: username, password: password);
-    showLoading();
-    service.register(request).then((value) {
-      hideLoading();
-      if (value != null) {
-        showSnackbar(
-            'berhasil mendaftar',
-            SnackBarAction(
-                label: 'OK',
-                onPressed: () {
-                  Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) => const Login()),
-                      (route) => false);
-                }));
-      } else {
-        showSnackbar('username sudah terdaftar',
-            SnackBarAction(label: 'OK', onPressed: () {}));
-      }
-    }).catchError((err) {
-      hideLoading();
-      showSnackbar('Terjadi kesalahan server',
-          SnackBarAction(label: 'OK', onPressed: () {}));
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _controllerName.addListener(() {
-      _controllerUsername.addListener(() {
-        _controllerPassword.addListener(() {
-          setState(() {
-            _isButtonActive = _controllerUsername.text.isNotEmpty &&
-                _controllerPassword.text.isNotEmpty &&
-                _controllerName.text.isNotEmpty;
-          });
+    if (name != '' && username != '' && password != '') {
+      if (password.length > 8) {
+        showLoading();
+        service.register(request).then((value) {
+          hideLoading();
+          if (value != null) {
+            if (value.status == 'CONFLICT') {
+              global.showSnackbar(context, 'Username sudah terdaftar');
+            } else {
+              _setFieldEmpty();
+              global.showSnackbar(
+                context,
+                'Berhasil mendaftar, silahkan login',
+              );
+            }
+          } else {
+            global.showSnackbar(context, 'Terjadi kesalahan saat mendaftar');
+          }
+        }).catchError((err) {
+          hideLoading();
+          global.showSnackbar(context, 'Terjadi kesalahan saat mendaftar');
         });
-      });
-    });
+      } else {
+        hideLoading();
+        global.showSnackbar(context, 'Password minimal 8 karakter');
+      }
+    } else {
+      hideLoading();
+      global.showSnackbar(context, 'Tidak boleh kosong');
+    }
   }
 
   @override
   void dispose() {
-    super.dispose();
+    _controllerName.dispose();
     _controllerPassword.dispose();
     _controllerUsername.dispose();
+    super.dispose();
   }
 
   @override
@@ -161,20 +158,41 @@ class _RegisterState extends State<Register> {
                     const SizedBox(
                       height: 30,
                     ),
-                    ElevatedButton(
-                      onPressed: _isButtonActive ? () => register() : null,
-                      style:
-                          ElevatedButton.styleFrom(primary: Colors.amber[600]),
-                      child: _isLoading
-                          ? const Text(
-                              'Sedang Mendatar...',
-                              style: TextStyle(color: Colors.black),
-                            )
-                          : const Text(
-                              'Daftar',
-                              style: TextStyle(color: Colors.black),
-                            ),
-                    )
+                    SizedBox(
+                      height: 50.0,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : () => register(),
+                        style: ElevatedButton.styleFrom(
+                          primary: Colors.amber[600],
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: _isLoading
+                            ? const Text(
+                                'Sedang Mendatar...',
+                                style: TextStyle(color: Colors.black),
+                              )
+                            : const Text(
+                                'Daftar',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Sudah punya akun ?'),
+                        TextButton(
+                            onPressed: () {
+                              global.customPushReplaceNavigator(
+                                  context, const Login());
+                            },
+                            child: const Text('Masuk'))
+                      ],
+                    ),
                   ]),
             ),
           ),

@@ -5,6 +5,7 @@ import 'package:password_manager/api/notes/note_req_res.dart';
 import 'package:password_manager/api/notes/note_service.dart';
 import 'package:password_manager/view/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:password_manager/utils/helper.dart' as global;
 
 class AddNotePage extends StatefulWidget {
   const AddNotePage({Key? key}) : super(key: key);
@@ -16,7 +17,6 @@ class AddNotePage extends StatefulWidget {
 class _AddNotePageState extends State<AddNotePage> {
   String noteTitle = '';
   String noteDescription = '';
-  bool _isButtonActive = false;
   bool _isLoading = false;
   final bool _pinned = true;
   final bool _snap = false;
@@ -28,16 +28,10 @@ class _AddNotePageState extends State<AddNotePage> {
   final NoteServiceImpl service = NoteServiceImpl();
 
   @override
-  void initState() {
-    super.initState();
-    _controllerTitle.addListener(() {
-      _controllerDescription.addListener(() {
-        setState(() {
-          _isButtonActive = _controllerTitle.text.isNotEmpty &&
-              _controllerDescription.text.isNotEmpty;
-        });
-      });
-    });
+  void dispose() {
+    _controllerTitle.dispose();
+    _controllerDescription.dispose();
+    super.dispose();
   }
 
   void showLoading() {
@@ -52,11 +46,6 @@ class _AddNotePageState extends State<AddNotePage> {
     });
   }
 
-  void showSnackbar(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
-  }
-
   addData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var userId = prefs.getString('userId') ?? false;
@@ -68,24 +57,32 @@ class _AddNotePageState extends State<AddNotePage> {
   void addNote(userId) async {
     AddUpdateNoteRequest request = AddUpdateNoteRequest(
         noteTitle: noteTitle, noteDescription: noteDescription, userId: userId);
-    showLoading();
-    service.create(request).then((value) {
-      if (value != null) {
+    if (noteTitle != '' && noteDescription != '') {
+      showLoading();
+      service.create(request).then((value) {
+        if (value != null) {
+          hideLoading();
+          Navigator.pop(context);
+          hideLoading();
+          global.showSnackbar(context, 'Data berhasil ditambahkan');
+          Future.delayed(const Duration(milliseconds: 2000), () {
+            setState(() {
+              global.customPushRemoveNavigator(context, const HomePage());
+            });
+          });
+        } else {
+          hideLoading();
+          log('value ${value!.data}');
+          global.showSnackbar(context, 'Gagal menambahkan data');
+        }
+      }).onError((error, stackTrace) {
         hideLoading();
-        Navigator.pop(context);
-        Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const Home()),
-            (route) => false);
-      } else {
-        hideLoading();
-        log('value ${value!.data}');
-        showSnackbar('Gagal menambahkan data');
-      }
-    }).onError((error, stackTrace) {
-      hideLoading();
-      showSnackbar('Terjadi kesalahan saat menambahkan data');
-      log('error : $error');
-    });
+        global.showSnackbar(context, 'Terjadi kesalahan saat menambahkan data');
+        log('error : $error');
+      });
+    } else {
+      global.showSnackbar(context, 'Tidak boleh kosong');
+    }
   }
 
   @override
@@ -99,51 +96,63 @@ class _AddNotePageState extends State<AddNotePage> {
             floating: _floating,
             expandedHeight: 160.0,
             flexibleSpace: const FlexibleSpaceBar(
-              title: Text('Tambah Catatan'),
+              title: Text(
+                'Tambah Catatan',
+                style: TextStyle(fontSize: 15),
+              ),
+              centerTitle: true,
               background: Icon(
-                Icons.note_add_outlined,
-                size: 50,
+                Icons.note_add,
+                size: 100.0,
               ),
             ),
-            actions: [
-              if (_isButtonActive)
-                IconButton(
-                    onPressed: () {
-                      addData();
-                    },
-                    icon: const Icon(Icons.done))
-            ],
+            backgroundColor: Colors.amber[600],
           ),
           SliverToBoxAdapter(
-              child: _isLoading
-                  ? const LinearProgressIndicator()
-                  : Padding(
-                      padding: const EdgeInsets.all(30),
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            decoration: const InputDecoration.collapsed(
-                                hintText: "Title"),
-                            onChanged: (e) => {noteTitle = e},
-                            controller: _controllerTitle,
-                          ),
-                          const SizedBox(
-                            height: 10.0,
-                          ),
-                          TextFormField(
-                            onChanged: (e) => {noteDescription = e},
-                            enableSuggestions: false,
-                            autocorrect: false,
-                            controller: _controllerDescription,
-                            maxLines:
-                                MediaQuery.of(context).size.height.toInt(),
-                            decoration: const InputDecoration.collapsed(
-                                hintText: "Deskripsi"),
-                          ),
-                        ],
-                      ),
-                    ))
+              child: Padding(
+            padding: const EdgeInsets.all(30),
+            child: Column(
+              children: [
+                TextFormField(
+                  onChanged: (e) => {noteTitle = e},
+                  controller: _controllerTitle,
+                  decoration: const InputDecoration(label: Text('Title')),
+                ),
+                const SizedBox(
+                  height: 30.0,
+                ),
+                TextFormField(
+                  onChanged: (e) => {noteDescription = e},
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  controller: _controllerDescription,
+                  maxLines: MediaQuery.of(context).size.height.toInt(),
+                  decoration:
+                      const InputDecoration.collapsed(hintText: "Deskripsi"),
+                ),
+              ],
+            ),
+          ))
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _isLoading
+            ? null
+            : () {
+                addData();
+              },
+        backgroundColor: Colors.grey[800],
+        child: _isLoading
+            ? SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  color: Colors.amber[600],
+                ))
+            : const Icon(
+                Icons.add,
+                color: Colors.white,
+              ),
       ),
     );
   }

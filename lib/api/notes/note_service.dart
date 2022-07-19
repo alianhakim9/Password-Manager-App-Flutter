@@ -3,10 +3,9 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:password_manager/api/notes/note_req_res.dart';
-import 'package:password_manager/utils/globals.dart' as globals;
+import 'package:password_manager/model/note_model.dart';
+import 'package:password_manager/utils/helper.dart' as globals;
 import 'package:http/http.dart' as http;
-
-import '../../model/note_model.dart';
 
 abstract class NoteInterface {
   void create(AddUpdateNoteRequest request);

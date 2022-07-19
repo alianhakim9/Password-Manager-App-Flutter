@@ -1,8 +1,10 @@
+// ignore_for_file: no_logic_in_create_state
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:password_manager/model/password_manager_model.dart';
 
-import 'update_password_manager_page.dart';
+import 'package:password_manager/utils/helper.dart' as global;
+import 'package:password_manager/view/password_manager_pages/update_password_manager_page.dart';
 
 class DetailPasswordManager extends StatefulWidget {
   const DetailPasswordManager({Key? key, required this.data}) : super(key: key);
@@ -26,14 +28,20 @@ class _DetailPasswordManagerState extends State<DetailPasswordManager> {
   bool _isObscure = true;
 
   @override
-  Widget build(BuildContext context) {
-    @override
-    initState() {
-      super.initState();
-      _textPassController.text = data!.pmPassword;
-      password = data!.pmPassword;
-    }
+  void initState() {
+    _textPassController.text = data!.pmPassword;
+    password = data!.pmPassword;
+    super.initState();
+  }
 
+  @override
+  void dispose() {
+    _textPassController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -56,101 +64,96 @@ class _DetailPasswordManagerState extends State<DetailPasswordManager> {
             actions: [
               IconButton(
                   onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => UpdatePasswordManager(
-                                  data: data!,
-                                )));
+                    global.customPushOnlyNavigator(
+                        context, UpdatePasswordManager(data: data!));
                   },
                   icon: const Icon(Icons.edit))
             ],
+            backgroundColor: Colors.amber[600],
           ),
           SliverToBoxAdapter(
-              child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 4,
-                      child: TextFormField(
-                        readOnly: true,
-                        controller: TextEditingController()
-                          ..text = data!.pmUsername,
-                        onChanged: (e) => password = e,
-                        decoration: const InputDecoration(
-                            border: InputBorder.none, labelText: 'Username'),
-                      ),
-                    ),
-                    Expanded(
-                        child: TextButton(
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: data!.pmUsername))
-                            .then((value) => ScaffoldMessenger.of(context)
-                                .showSnackBar(const SnackBar(
-                                    content:
-                                        Text('Username berhasil di copy'))));
-                      },
-                      child: const Text('COPY'),
-                    ))
-                  ],
-                ),
-                Row(
-                  children: [
-                    Expanded(
+              child: Card(
+            elevation: 0,
+            margin: const EdgeInsets.only(left: 10, top: 10, right: 10),
+            child: Padding(
+              padding: const EdgeInsets.all(30.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
                         flex: 4,
                         child: TextFormField(
-                            readOnly: true,
-                            controller: TextEditingController()
-                              ..text = data!.pmPassword,
-                            obscureText: _isObscure,
-                            onChanged: (e) => password = e,
-                            decoration: InputDecoration(
-                                border: InputBorder.none,
-                                labelText: 'Password',
-                                suffixIcon: IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _isObscure = !_isObscure;
-                                      });
-                                    },
-                                    icon: Icon(_isObscure
-                                        ? Icons.visibility
-                                        : Icons.visibility_off))))),
-                    Expanded(
-                        child: TextButton(
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: data!.pmPassword))
-                            .then((value) => ScaffoldMessenger.of(context)
-                                .showSnackBar(const SnackBar(
-                                    content:
-                                        Text('Password berhasil di copy'))));
-                      },
-                      child: const Text('COPY'),
-                    ))
-                  ],
-                ),
-                TextFormField(
-                  readOnly: true,
-                  controller: TextEditingController()..text = data!.createdAt,
-                  decoration: const InputDecoration(
-                      border: InputBorder.none, labelText: 'Dibuat'),
-                ),
-                TextFormField(
-                  readOnly: true,
-                  controller: TextEditingController()
-                    ..text = data!.updatedAt == 'null'
-                        ? 'Belum pernah diperbarui'
-                        : data!.updatedAt,
-                  decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      labelText: 'Terakhir diperbarui'),
-                ),
-              ],
+                          readOnly: true,
+                          controller: TextEditingController()
+                            ..text = data!.pmUsername,
+                          onChanged: (e) => password = e,
+                          decoration: const InputDecoration(
+                              border: InputBorder.none, labelText: 'Username'),
+                        ),
+                      ),
+                      Expanded(
+                          child: TextButton(
+                        onPressed: () {
+                          global.copyData(
+                              context, data!.pmUsername, 'Username');
+                        },
+                        child: const Text('COPY'),
+                      ))
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                          flex: 4,
+                          child: TextFormField(
+                              readOnly: true,
+                              controller: TextEditingController()
+                                ..text = data!.pmPassword,
+                              obscureText: _isObscure,
+                              onChanged: (e) => password = e,
+                              decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  labelText: 'Password',
+                                  suffixIcon: IconButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          _isObscure = !_isObscure;
+                                        });
+                                      },
+                                      icon: Icon(_isObscure
+                                          ? Icons.visibility
+                                          : Icons.visibility_off))))),
+                      Expanded(
+                          child: TextButton(
+                        onPressed: () {
+                          global.copyData(
+                              context, data!.pmPassword, 'Password');
+                        },
+                        child: const Text('COPY'),
+                      ))
+                    ],
+                  ),
+                  TextFormField(
+                    readOnly: true,
+                    controller: TextEditingController()..text = data!.createdAt,
+                    decoration: const InputDecoration(
+                        border: InputBorder.none, labelText: 'Dibuat'),
+                  ),
+                  TextFormField(
+                    readOnly: true,
+                    controller: TextEditingController()
+                      ..text = data!.updatedAt == 'null'
+                          ? 'Belum pernah diperbarui'
+                          : data!.updatedAt,
+                    decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        labelText: 'Terakhir diperbarui'),
+                  ),
+                ],
+              ),
             ),
           ))
         ],

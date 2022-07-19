@@ -3,28 +3,45 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:password_manager/api/notes/note_service.dart';
 import 'package:password_manager/api/password_manager/password_manager_service.dart';
+import 'package:password_manager/api/personal_info/personal_info_service.dart';
 import 'package:password_manager/cards/note_card.dart';
+import 'package:password_manager/cards/password_manager_card.dart';
+import 'package:password_manager/cards/personal_info_card.dart';
 import 'package:password_manager/view/note_pages/add_note_page.dart';
 import 'package:password_manager/view/password_generator.dart';
+import 'package:password_manager/view/password_manager_pages/add_password_manager_page.dart';
+import 'package:password_manager/view/personal_info_pages/add_personal_info_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../cards/password_manager_card.dart';
-import 'password_manager_pages/add_password_manager_page.dart';
+import 'package:password_manager/utils/helper.dart' as global;
+import 'package:shimmer/shimmer.dart';
 
-class Home extends StatefulWidget {
-  const Home({Key? key}) : super(key: key);
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
 
   @override
-  State<Home> createState() => _HomeState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _HomeState extends State<Home> {
+class _HomePageState extends State<HomePage> {
   final PasswordManagerServiceImpl service = PasswordManagerServiceImpl();
   final NoteServiceImpl noteService = NoteServiceImpl();
+  final PersonalInfoServiceImpl personalInfoService = PersonalInfoServiceImpl();
+
   List passwords = [];
   List notes = [];
+  List personalInfos = [];
   bool _showLoading = false;
   String userId = '';
+  String username = '';
+
+  Future getUsername() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var usernamePrefs = prefs.getString('username');
+    if (usernamePrefs != null) {
+      username = usernamePrefs.toString();
+    }
+  }
 
   showLoading() {
     setState(() {
@@ -75,12 +92,25 @@ class _HomeState extends State<Home> {
         hideLoading();
         log('note service error :$err');
       });
+
+      personalInfoService.get(id).then((value) {
+        if (value != null) {
+          setState(() {
+            hideLoading();
+            personalInfos = value;
+          });
+        }
+      }).catchError((err) {
+        hideLoading();
+        log('note service error :$err');
+      });
     });
   }
 
   @override
   void initState() {
     getData();
+    getUsername();
     super.initState();
   }
 
@@ -91,7 +121,7 @@ class _HomeState extends State<Home> {
       initialIndex: 0,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Home'),
+          title: const Text('HomePage'),
           bottom: const TabBar(
             indicatorColor: Color.fromRGBO(66, 66, 66, 1),
             isScrollable: true,
@@ -110,105 +140,60 @@ class _HomeState extends State<Home> {
                 onPressed: () {},
                 icon: const Icon(Icons.notifications_outlined))
           ],
+          backgroundColor: Colors.amber[600],
         ),
         body: TabBarView(
           children: [
-            Scaffold(
-              body: _showLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: getData,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.only(
-                            bottom: kFloatingActionButtonMargin + 48),
-                        itemBuilder: (context, i) {
-                          return PasswordManagerCard(context, passwords[i]);
-                        },
-                        itemCount: passwords.length,
-                      ),
-                    ),
-              floatingActionButton: FloatingActionButton.extended(
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const AddPasswordManager()));
-                },
-                label: const Text(
-                  'Tambah Password',
-                  style: TextStyle(color: Colors.white),
+            HomeBody(
+                context,
+                _showLoading,
+                () => getData(),
+                passwords,
+                ListView.builder(
+                  padding: const EdgeInsets.only(
+                      bottom: kFloatingActionButtonMargin + 48),
+                  itemBuilder: (context, i) {
+                    return PasswordManagerCard(context, passwords[i]);
+                  },
+                  itemCount: passwords.length,
                 ),
-                icon: const Icon(
-                  Icons.add,
-                  color: Colors.white,
+                'Tambah password', () {
+              global.customPushOnlyNavigator(
+                  context, const AddPasswordManager());
+            }),
+            HomeBody(
+                context,
+                _showLoading,
+                () => getData(),
+                notes,
+                ListView.builder(
+                  padding: const EdgeInsets.only(
+                      bottom: kFloatingActionButtonMargin + 48),
+                  itemBuilder: (context, i) {
+                    return NoteCard(context, notes[i]);
+                  },
+                  itemCount: notes.length,
                 ),
-                backgroundColor: Colors.grey[800],
-              ),
-            ),
-            Scaffold(
-              body: _showLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: getData,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.only(
-                            bottom: kFloatingActionButtonMargin + 48),
-                        itemBuilder: (context, i) {
-                          // tambah kondisi if empty
-                          return NoteCard(context, notes[i]);
-                        },
-                        itemCount: notes.length,
-                      ),
-                    ),
-              floatingActionButton: FloatingActionButton.extended(
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const AddNotePage()));
-                },
-                label: const Text(
-                  'Tambah Catatan',
-                  style: TextStyle(color: Colors.white),
+                'Tambah Catatan', () {
+              global.customPushOnlyNavigator(context, const AddNotePage());
+            }),
+            HomeBody(
+                context,
+                _showLoading,
+                () => getData(),
+                personalInfos,
+                ListView.builder(
+                  padding: const EdgeInsets.only(
+                      bottom: kFloatingActionButtonMargin + 48),
+                  itemBuilder: (context, i) {
+                    return PersonalInfoCard(context, personalInfos[i], i);
+                  },
+                  itemCount: personalInfos.length,
                 ),
-                icon: const Icon(
-                  Icons.add,
-                  color: Colors.white,
-                ),
-                backgroundColor: Colors.grey[800],
-              ),
-            ),
-            Scaffold(
-              body: _showLoading
-                  ? const CircularProgressIndicator()
-                  : RefreshIndicator(
-                      onRefresh: getData,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.only(
-                            bottom: kFloatingActionButtonMargin + 48),
-                        itemBuilder: (context, i) {
-                          return PasswordManagerCard(context, passwords[i]);
-                        },
-                        itemCount: passwords.length,
-                      ),
-                    ),
-              floatingActionButton: FloatingActionButton.extended(
-                onPressed: () {},
-                label: const Text(
-                  'Tambah Personal Info',
-                  style: TextStyle(color: Colors.white),
-                ),
-                icon: const Icon(
-                  Icons.add,
-                  color: Colors.white,
-                ),
-                backgroundColor: Colors.grey[800],
-              ),
-            ),
+                'Tambah Personal Info', () {
+              global.customPushOnlyNavigator(
+                  context, const AddPersonalInfoPage());
+            }),
           ],
         ),
         drawer: Drawer(
@@ -225,15 +210,18 @@ class _HomeState extends State<Home> {
                     child: CircleAvatar(
                       backgroundColor: Colors.amber[600],
                       radius: 30,
+                      backgroundImage: const AssetImage(
+                          'assets/illustrations/logo_only.png'),
                     ),
                   ),
                 ],
               ),
-              const Padding(
-                padding: EdgeInsets.only(left: 30, right: 30, top: 10),
+              Padding(
+                padding: const EdgeInsets.only(left: 30, right: 30, top: 10),
                 child: Text(
-                  'Alian Hakim',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  username,
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(
@@ -246,17 +234,9 @@ class _HomeState extends State<Home> {
                 leading: const Icon(Icons.generating_tokens),
                 title: const Text('Password Generator'),
                 onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              const PasswordGeneratorPages()));
+                  global.customPushOnlyNavigator(
+                      context, const PasswordGeneratorPages());
                 },
-              ),
-              ListTile(
-                leading: const Icon(Icons.settings),
-                title: const Text('Pengaturan'),
-                onTap: () {},
               ),
             ],
           )),
@@ -264,4 +244,87 @@ class _HomeState extends State<Home> {
       ),
     );
   }
+}
+
+Widget HomeBody(BuildContext context, bool isLoading, Future Function() refresh,
+    List data, Widget listView, String floatingLabel, VoidCallback onPressed) {
+  return Scaffold(
+    body: isLoading
+        ? Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Shimmer.fromColors(
+              baseColor: const Color.fromRGBO(224, 224, 224, 1),
+              highlightColor: const Color.fromRGBO(158, 158, 158, 1),
+              child: Row(
+                children: [
+                  Expanded(
+                      flex: 1,
+                      child: Container(
+                        height: 50,
+                        color: Colors.grey[300],
+                      )),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  Expanded(
+                      flex: 4,
+                      child: Container(
+                        height: 50,
+                        color: Colors.grey[300],
+                      )),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  Expanded(
+                      flex: 1,
+                      child: Container(
+                        height: 50,
+                        color: Colors.grey[300],
+                      )),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  Expanded(
+                      flex: 1,
+                      child: Container(
+                        height: 50,
+                        color: Colors.grey[300],
+                      )),
+                ],
+              ),
+            ),
+          )
+        : RefreshIndicator(
+            onRefresh: refresh,
+            child: data.isEmpty
+                ? Center(
+                    child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Text('Data masih kosong'),
+                      TextButton(
+                        onPressed: () {
+                          refresh();
+                        },
+                        style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30))),
+                        child: const Text("Refresh"),
+                      )
+                    ],
+                  ))
+                : listView),
+    floatingActionButton: FloatingActionButton.extended(
+        onPressed: onPressed,
+        label: Text(
+          floatingLabel,
+          style: const TextStyle(color: Colors.white),
+        ),
+        icon: const Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
+        backgroundColor: Colors.grey[800]),
+  );
 }

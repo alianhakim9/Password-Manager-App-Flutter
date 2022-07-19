@@ -1,10 +1,12 @@
+// ignore_for_file: must_be_immutable, no_logic_in_create_state
+
 import 'package:flutter/material.dart';
 import 'package:password_manager/api/notes/note_req_res.dart';
 import 'package:password_manager/api/notes/note_service.dart';
+import 'package:password_manager/model/note_model.dart';
+import 'package:password_manager/view/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../model/note_model.dart';
-import '../home.dart';
+import 'package:password_manager/utils/helper.dart' as global;
 
 class UpdateNotePage extends StatefulWidget {
   UpdateNotePage({Key? key, required this.data}) : super(key: key);
@@ -22,7 +24,6 @@ class _UpdateNotePageState extends State<UpdateNotePage> {
   String title = '';
   String description = '';
   bool _showLoading = false;
-  bool _hideLoading = false;
 
   final TextEditingController _controllerTitle = TextEditingController();
   final TextEditingController _controllerDescription = TextEditingController();
@@ -36,6 +37,13 @@ class _UpdateNotePageState extends State<UpdateNotePage> {
 
     title = data!.noteTitle;
     description = data!.noteDescription;
+  }
+
+  @override
+  void dispose() {
+    _controllerTitle.dispose();
+    _controllerDescription.dispose();
+    super.dispose();
   }
 
   showLoading() {
@@ -63,10 +71,12 @@ class _UpdateNotePageState extends State<UpdateNotePage> {
           noteTitle: title, noteDescription: description, userId: id);
       service.update(request, data!.id).then((value) {
         hideLoading();
-        Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const Home()),
-            (route) => false);
+        global.showSnackbar(context, 'Data berhasil di update');
+        Future.delayed(const Duration(milliseconds: 2000), () {
+          setState(() {
+            global.customPushRemoveNavigator(context, const HomePage());
+          });
+        });
       });
     });
   }
@@ -76,13 +86,13 @@ class _UpdateNotePageState extends State<UpdateNotePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ubah Note'),
+        backgroundColor: Colors.amber[600],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              if (_showLoading) const LinearProgressIndicator(),
               TextField(
                 onChanged: (e) => title = e,
                 controller: _controllerTitle,
@@ -94,15 +104,40 @@ class _UpdateNotePageState extends State<UpdateNotePage> {
                 controller: _controllerDescription,
                 decoration: const InputDecoration(label: Text('Deskripsi')),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width,
-                child: ElevatedButton(
-                  onPressed: () {
-                    _update();
-                  },
-                  child: const Text(('Simpan')),
-                ),
-              )
+              const SizedBox(
+                height: 30,
+              ),
+              ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                      primary: Colors.black,
+                      minimumSize: const Size.fromHeight(50),
+                      elevation: 0),
+                  onPressed: _showLoading
+                      ? null
+                      : () {
+                          _update();
+                        },
+                  icon: _showLoading
+                      ? Container(
+                          width: 16,
+                          height: 16,
+                          margin: const EdgeInsets.only(right: 30),
+                          child: CircularProgressIndicator(
+                            color: Colors.grey[800],
+                          ))
+                      : const Icon(
+                          Icons.save,
+                          color: Colors.white,
+                        ),
+                  label: _showLoading
+                      ? const Text(
+                          'Sedang menyimpan data...',
+                          style: TextStyle(color: Colors.white),
+                        )
+                      : const Text(
+                          'Simpan',
+                          style: TextStyle(color: Colors.white),
+                        ))
             ],
           ),
         ),

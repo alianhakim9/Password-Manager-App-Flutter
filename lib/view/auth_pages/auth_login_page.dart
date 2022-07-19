@@ -5,7 +5,11 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:password_manager/api/auth/auth.dart';
 import 'package:password_manager/api/auth/auth_service.dart';
+import 'package:password_manager/view/auth_pages/auth_register_page.dart';
+import 'package:password_manager/view/auth_pages/reset_password_page.dart';
 import 'package:password_manager/view/home.dart';
+import 'package:password_manager/utils/helper.dart' as global;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -17,71 +21,66 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   bool _isObscure = true;
   bool _isLoading = false;
-  bool _isButtonActive = false;
   String username = '';
   String password = '';
   final TextEditingController _controllerUsername = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
   final AuthServiceImpl service = AuthServiceImpl();
 
+  Future getUsername() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var usernamePrefs = prefs.getString('username');
+    if (usernamePrefs != null) {
+      _controllerUsername.text = usernamePrefs;
+      username = usernamePrefs.toString();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   void hideLoading() {
     setState(() {
       _isLoading = false;
-      _isButtonActive = true;
     });
   }
 
   void showLoading() {
     setState(() {
       _isLoading = true;
-      _isButtonActive = false;
     });
-  }
-
-  void showSnackbar(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   void login() async {
     LoginRequest request = LoginRequest(username: username, password: password);
-    showLoading();
-    service.login(request).then((value) {
-      hideLoading();
-      log('$value');
-      if (value != null) {
-        Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const Home()),
-            (route) => false);
-      } else {
-        showSnackbar('Login gagal, cek kembali email dan password');
-      }
-    }).catchError((err) {
-      hideLoading();
-      log('err $err');
-      showSnackbar('Terjadi kesalahan server');
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _controllerUsername.addListener(() {
-      _controllerPassword.addListener(() {
-        setState(() {
-          _isButtonActive = _controllerUsername.text.isNotEmpty &&
-              _controllerPassword.text.isNotEmpty;
-        });
+    if (username != '' && password != '') {
+      showLoading();
+      service.login(request).then((value) {
+        hideLoading();
+        log('$value');
+        if (value != null) {
+          global.customPushRemoveNavigator(context, const HomePage());
+        } else {
+          global.showSnackbar(
+              context, 'Login gagal, cek kembali email dan password');
+        }
+      }).catchError((err) {
+        hideLoading();
+        log('err $err');
+        global.showSnackbar(context, 'Terjadi kesalahan server');
       });
-    });
+    } else {
+      global.showSnackbar(context, 'Tidak boleh kosong');
+    }
   }
 
   @override
   void dispose() {
-    super.dispose();
     _controllerPassword.dispose();
     _controllerUsername.dispose();
+    super.dispose();
   }
 
   @override
@@ -139,21 +138,53 @@ class _LoginState extends State<Login> {
                       controller: _controllerPassword,
                     ),
                     const SizedBox(
-                      height: 30,
+                      height: 10,
                     ),
-                    ElevatedButton(
-                      onPressed: _isButtonActive ? () => login() : null,
-                      style:
-                          ElevatedButton.styleFrom(primary: Colors.amber[600]),
-                      child: _isLoading
-                          ? const Text(
-                              'Sedang Login...',
-                              style: TextStyle(color: Colors.black),
-                            )
-                          : const Text(
-                              'Masuk',
-                              style: TextStyle(color: Colors.black),
-                            ),
+                    SizedBox(
+                      height: 50.0,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : () => login(),
+                        style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            primary: Colors.amber[600]),
+                        child: _isLoading
+                            ? const Text(
+                                'Sedang Login...',
+                                style: TextStyle(color: Colors.black),
+                              )
+                            : const Text(
+                                'Masuk',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Belum punya akun ?'),
+                        TextButton(
+                          onPressed: () {
+                            global.customPushOnlyNavigator(
+                                context, const Register());
+                          },
+                          style: TextButton.styleFrom(
+                            primary: Colors.amber[600],
+                          ),
+                          child: const Text('Daftar'),
+                        )
+                      ],
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        global.customPushOnlyNavigator(
+                            context, const ReserPasswordPage());
+                      },
+                      style: TextButton.styleFrom(primary: Colors.amber[600]),
+                      child: const Text('Reset Password'),
                     )
                   ]),
             ),

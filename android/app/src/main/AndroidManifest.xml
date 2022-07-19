@@ -4,7 +4,7 @@
  <uses-permission android:name="android.permission.INTERNET" />
 
    <application
-        android:label="password_manager"
+        android:label="Paman ID"
         android:name="${applicationName}"
         android:usesCleartextTraffic="true"
         android:icon="@mipmap/ic_launcher">

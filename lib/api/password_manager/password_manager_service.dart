@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:password_manager/api/password_manager/password_manager_req_res.dart';
 import 'package:http/http.dart' as http;
 import 'package:password_manager/model/password_manager_model.dart';
-import 'package:password_manager/utils/globals.dart' as globals;
+import 'package:password_manager/utils/helper.dart' as globals;
 
 abstract class PasswordManagerService {
   void create(AddPasswordManagerRequest request);

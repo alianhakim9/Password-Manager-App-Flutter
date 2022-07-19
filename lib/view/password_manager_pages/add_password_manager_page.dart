@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
@@ -5,6 +7,9 @@ import 'package:password_manager/api/password_manager/password_manager_req_res.d
 import 'package:password_manager/api/password_manager/password_manager_service.dart';
 import 'package:password_manager/view/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:password_manager/utils/helper.dart' as global;
+import 'dart:math' as math;
 
 class AddPasswordManager extends StatefulWidget {
   const AddPasswordManager({Key? key}) : super(key: key);
@@ -18,7 +23,6 @@ class _AddPasswordManagerState extends State<AddPasswordManager> {
   String password = '';
   String website = '';
   bool _isObscure = true;
-  bool _isButtonActive = false;
   bool _isLoading = false;
   final bool _pinned = true;
   final bool _snap = false;
@@ -31,18 +35,11 @@ class _AddPasswordManagerState extends State<AddPasswordManager> {
   final PasswordManagerServiceImpl service = PasswordManagerServiceImpl();
 
   @override
-  void initState() {
-    super.initState();
-    _controllerUsername.addListener(() {
-      _controllerPassword.addListener(() {
-        _controllerWebsite.addListener(() {
-          setState(() {
-            _isButtonActive = _controllerUsername.text.isNotEmpty &&
-                _controllerPassword.text.isNotEmpty;
-          });
-        });
-      });
-    });
+  void dispose() {
+    _controllerUsername.dispose();
+    _controllerPassword.dispose();
+    _controllerWebsite.dispose();
+    super.dispose();
   }
 
   void showLoading() {
@@ -57,43 +54,46 @@ class _AddPasswordManagerState extends State<AddPasswordManager> {
     });
   }
 
-  void showSnackbar(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
-  }
-
   addData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var userId = prefs.getString('userId') ?? false;
     if (userId != '') {
-      AddPasswordManager(userId);
+      addpaswordManager(userId);
     }
   }
 
-  void AddPasswordManager(userId) async {
+  void addpaswordManager(userId) async {
     AddPasswordManagerRequest request = AddPasswordManagerRequest(
         pmUsername: username,
         pmPassword: password,
         pmWebsite: website,
         userId: userId);
-    showLoading();
-    service.create(request).then((value) {
-      if (value != null) {
+    if (username != '' && password != '' && website != '') {
+      showLoading();
+      service.create(request).then((value) {
+        if (value != null) {
+          hideLoading();
+          Navigator.pop(context);
+          hideLoading();
+          global.showSnackbar(context, 'Data berhasil ditambahkan');
+          Future.delayed(const Duration(milliseconds: 2000), () {
+            setState(() {
+              global.customPushRemoveNavigator(context, const HomePage());
+            });
+          });
+        } else {
+          hideLoading();
+          log('value ${value!.data}');
+          global.showSnackbar(context, 'Gagal menambahkan data');
+        }
+      }).onError((error, stackTrace) {
         hideLoading();
-        Navigator.pop(context);
-        Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const Home()),
-            (route) => false);
-      } else {
-        hideLoading();
-        log('value ${value!.data}');
-        showSnackbar('Gagal menambahkan data');
-      }
-    }).onError((error, stackTrace) {
-      hideLoading();
-      showSnackbar('Terjadi kesalahan saat menambahkan data');
-      log('error : $error');
-    });
+        global.showSnackbar(context, 'Terjadi kesalahan saat menambahkan data');
+        log('error : $error');
+      });
+    } else {
+      global.showSnackbar(context, 'Tidak boleh kosong');
+    }
   }
 
   @override
@@ -107,74 +107,99 @@ class _AddPasswordManagerState extends State<AddPasswordManager> {
             floating: _floating,
             expandedHeight: 160.0,
             flexibleSpace: const FlexibleSpaceBar(
-              title: Text('Tambah password'),
+              title: Text(
+                'Tambah password',
+                style: TextStyle(fontSize: 15),
+              ),
+              centerTitle: true,
               background: Icon(
                 Icons.key,
+                size: 100.0,
               ),
             ),
-            actions: [
-              if (_isButtonActive)
-                IconButton(
-                    onPressed: () {
-                      addData();
-                    },
-                    icon: const Icon(Icons.done))
-            ],
+            backgroundColor: Colors.amber[600],
           ),
           SliverToBoxAdapter(
-              child: _isLoading
-                  ? const LinearProgressIndicator()
-                  : Padding(
-                      padding: const EdgeInsets.all(30),
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'username',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (e) => {username = e},
-                            controller: _controllerUsername,
+              child: Padding(
+            padding: const EdgeInsets.all(30),
+            child: Column(
+              children: [
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Username',
+                  ),
+                  onChanged: (e) => {username = e},
+                  controller: _controllerUsername,
+                ),
+                const SizedBox(
+                  height: 10.0,
+                ),
+                TextFormField(
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _isObscure = !_isObscure;
+                          });
+                        },
+                        icon: Icon(_isObscure
+                            ? Icons.visibility
+                            : Icons.visibility_off)),
+                  ),
+                  onChanged: (e) => {password = e},
+                  obscureText: _isObscure,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  controller: _controllerPassword,
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Website',
+                  ),
+                  onChanged: (e) => {website = e},
+                  controller: _controllerWebsite,
+                ),
+                const SizedBox(
+                  height: 30.0,
+                ),
+                ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                        primary: Colors.grey[800],
+                        minimumSize: const Size.fromHeight(50),
+                        elevation: 0),
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                            addData();
+                          },
+                    icon: _isLoading
+                        ? Container(
+                            width: 16,
+                            height: 16,
+                            margin: const EdgeInsets.only(right: 30),
+                            child: CircularProgressIndicator(
+                              color: Colors.grey[800],
+                            ))
+                        : const Icon(
+                            Icons.add,
+                            color: Colors.white,
                           ),
-                          const SizedBox(
-                            height: 10.0,
-                          ),
-                          TextFormField(
-                            decoration: InputDecoration(
-                              labelText: 'password',
-                              suffixIcon: IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _isObscure = !_isObscure;
-                                    });
-                                  },
-                                  icon: Icon(_isObscure
-                                      ? Icons.visibility
-                                      : Icons.visibility_off)),
-                              border: const OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                      color: Color.fromRGBO(255, 179, 0, 1))),
-                            ),
-                            onChanged: (e) => {password = e},
-                            obscureText: _isObscure,
-                            enableSuggestions: false,
-                            autocorrect: false,
-                            controller: _controllerPassword,
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'website',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (e) => {website = e},
-                            controller: _controllerWebsite,
-                          ),
-                        ],
-                      ),
-                    ))
+                    label: _isLoading
+                        ? const Text(
+                            'Sedang menambahkan data...',
+                            style: TextStyle(color: Colors.white),
+                          )
+                        : const Text(
+                            'Tambah',
+                            style: TextStyle(color: Colors.white),
+                          ))
+              ],
+            ),
+          ))
         ],
       ),
     );
